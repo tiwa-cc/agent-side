@@ -399,6 +399,123 @@ Recommended order:
 13. Add theme support
 14. Expand block types
 
+## Renderer Output Requirements
+
+The generated HTML should be readable, stable, and structurally correct.
+
+### HTML language
+
+The renderer must not hard-code `lang="en"`.
+
+The HTML language should be configurable from project configuration or page metadata.
+
+Preferred order:
+
+1. `page.lang` in DocIR
+2. `[site].lang` in `docir.toml`
+3. fallback value such as `en`
+
+Example:
+
+```toml
+[site]
+lang = "ja"
+```
+
+The generated HTML should use:
+
+```html
+<html lang="ja">
+```
+
+### Heading hierarchy
+
+The renderer must preserve a correct heading hierarchy.
+
+Do not render every block title as `h2`.
+
+The renderer should track nesting depth and choose headings accordingly.
+
+Example:
+
+```html
+<h1>Page Title</h1>
+<section>
+  <h2>Top Level Section</h2>
+  <section>
+    <h3>Nested Block Title</h3>
+  </section>
+</section>
+```
+
+Decision, risk, notice, mermaid, cards, table, and similar block titles should use a heading level appropriate to their nesting depth.
+
+Visual size may be adjusted with classes such as `h5`, but the semantic heading level should remain correct.
+
+### Clean class output
+
+The renderer should avoid unstable or noisy HTML output.
+
+Avoid outputs such as:
+
+```html
+<section class="doc-section ">
+```
+
+Prefer:
+
+```html
+<section class="doc-section">
+```
+
+Class names should be joined safely and empty class tokens should be removed.
+
+### Mermaid fallback
+
+Mermaid diagrams should not break the entire document when rendering fails.
+
+The renderer or preview layer should support a safe fallback strategy.
+
+Recommended behavior:
+
+* render Mermaid source in a visible block if Mermaid rendering fails
+* show a clear error message near the diagram
+* keep the rest of the document usable
+* optionally expose the original Mermaid source for debugging
+
+Mermaid rendering mode remains renderer-managed and configurable.
+
+### Accessibility
+
+Use semantic HTML where practical.
+
+Examples:
+
+* `main` for the document body
+* `section` for document sections
+* `article` for standalone semantic blocks such as decisions or risks
+* `table`, `thead`, `tbody`, `th`, and `td` for tables
+* `scope="col"` for table headers
+
+Notice-like blocks may use `role="note"` by default.
+Use stronger roles such as `role="alert"` only when the content should interrupt assistive technology users.
+
+### Snapshot targets
+
+Renderer snapshot tests should cover at least these block types:
+
+* notice
+* section
+* mermaid
+* decision
+* table
+* cards
+* risk
+* include-resolved documents
+* nested heading structures
+
+Snapshot tests should verify stable HTML output and prevent accidental renderer regressions.
+
 ## Responsibilities
 
 ### Loader

@@ -1,5 +1,6 @@
 [site]
 title = "agent-side sample"
+lang = "ja"
 entry = "docs/index.yml"
 out_dir = "dist"
 

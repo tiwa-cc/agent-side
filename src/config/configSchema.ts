@@ -3,6 +3,7 @@ import { z } from "zod";
 export const configSchema = z.object({
   site: z.object({
     title: z.string().default("agent-side"),
+    lang: z.string().default("en"),
     entry: z.string().default("docs/index.yml"),
     out_dir: z.string().default("dist"),
   }),

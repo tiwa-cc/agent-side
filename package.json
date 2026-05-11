@@ -8,7 +8,7 @@
     "validate": "tsx src/cli/main.ts validate docs/index.yml",
     "render": "tsx src/cli/main.ts render docs/index.yml --out dist",
     "preview": "vite --host 127.0.0.1",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch",
     "typecheck": "tsc --noEmit",
     "format": "prettier -w ."

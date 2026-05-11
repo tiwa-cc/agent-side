@@ -6,6 +6,7 @@ export type Priority = "low" | "normal" | "high";
 
 export interface DocIR {
   title: string;
+  lang?: string;
   description?: string;
   blocks: Block[];
 }
