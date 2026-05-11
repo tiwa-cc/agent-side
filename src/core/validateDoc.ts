@@ -1,7 +1,7 @@
 import type { DocIR } from "../ast/types.js";
 import type { DocirConfig } from "../config/configSchema.js";
-import { docSchema } from "../schema/docSchema.js";
+import { validateDocValue } from "../loader/validateDoc.js";
 
-export function validateDoc(doc: DocIR, _config?: DocirConfig): DocIR {
-  return docSchema.parse(doc) as DocIR;
+export function validateDoc(doc: unknown, config: DocirConfig): DocIR {
+  return validateDocValue(doc, config);
 }

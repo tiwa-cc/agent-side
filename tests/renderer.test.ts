@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { resolve } from "pathe";
+import type { DocirConfig } from "../src/config/configSchema.js";
 import { loadProject } from "../src/core/loadProject.js";
 import { renderProject } from "../src/core/renderProject.js";
+import { validateDoc } from "../src/core/validateDoc.js";
 import { renderDocument } from "../src/renderer/bootstrap/renderDocument.js";
 
 const repoRoot = process.cwd();
@@ -143,6 +145,75 @@ describe("renderer safety", () => {
     expect(html).not.toContain("javascript:");
     expect(html).not.toContain('<a href="');
     expect(html).toContain("Unsafe reference");
+  });
+});
+
+describe("public validation API", () => {
+  it("uses the same page wrapper and unknown key policy as the loader", async () => {
+    const { config } = await loadFixture("unknown-key-strip");
+    const doc = validateDoc(
+      {
+        page: {
+          title: "Wrapped",
+          lead: "Lead text",
+          unexpected: "value",
+          blocks: [
+            {
+              type: "cards",
+              title: "Cards",
+              items: [{ title: "Card", body: "Body", unexpected: "value" }],
+            },
+          ],
+        },
+      },
+      config,
+    );
+    const block = doc.blocks[0] as { items: Array<Record<string, unknown>> };
+
+    expect(doc.title).toBe("Wrapped");
+    expect(doc.description).toBe("Lead text");
+    expect((doc as unknown as Record<string, unknown>).unexpected).toBeUndefined();
+    expect(block.items[0]?.unexpected).toBeUndefined();
+  });
+
+  it("preserves unknown keys in passthrough mode", async () => {
+    const { config } = await loadFixture("unknown-key-passthrough");
+    const doc = validateDoc(
+      {
+        title: "Passthrough",
+        unexpected: "value",
+        blocks: [
+          {
+            type: "notice",
+            body: "Body",
+            unexpected: "value",
+          },
+        ],
+      },
+      config,
+    );
+
+    expect((doc as unknown as Record<string, unknown>).unexpected).toBe("value");
+    expect((doc.blocks[0] as unknown as Record<string, unknown>).unexpected).toBe("value");
+  });
+
+  it("rejects recursive presentation keys", async () => {
+    const { config } = await loadFixture("unknown-key-passthrough");
+
+    expect(() =>
+      validateDoc(
+        {
+          title: "Invalid",
+          blocks: [
+            {
+              type: "cards",
+              items: [{ title: "Card", body: "Body", style: "color:red" }],
+            },
+          ],
+        },
+        config,
+      ),
+    ).toThrow(/Presentation key "style" is not allowed/);
   });
 });
 
