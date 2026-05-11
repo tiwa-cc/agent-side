@@ -5,3 +5,9 @@ blocks:
     title: Strip Block Key
     body: Unknown keys should not fail in strip mode.
     unexpected: value
+  - type: cards
+    title: Strip Nested Item Key
+    items:
+      - title: Card
+        body: Nested unknown keys should be stripped before strict item validation.
+        unexpected: value

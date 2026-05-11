@@ -1,0 +1,7 @@
+title: Strict False
+unexpected: value
+blocks:
+  - type: notice
+    title: Strict False Keeps Unknown Keys
+    body: strict false makes unknown keys passthrough unless another policy is selected.
+    unexpected: value

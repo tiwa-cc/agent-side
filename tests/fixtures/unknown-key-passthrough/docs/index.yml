@@ -1,0 +1,10 @@
+title: Unknown Key Passthrough
+unexpected: value
+blocks:
+  - type: cards
+    title: Passthrough Block Key
+    unexpected: value
+    items:
+      - title: Card
+        body: Nested unknown keys should be retained in passthrough mode.
+        unexpected: value

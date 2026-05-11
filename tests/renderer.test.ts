@@ -30,9 +30,32 @@ describe("fixture-based rendering", () => {
 
   it("honors validation unknown_keys strip mode", async () => {
     const { doc } = await loadFixture("unknown-key-strip");
+    const firstBlock = doc.blocks[0] as Record<string, unknown>;
+    const secondBlock = doc.blocks[1] as { items: Array<Record<string, unknown>> };
 
     expect(doc.title).toBe("Unknown Key Strip");
-    expect(doc.blocks).toHaveLength(1);
+    expect(doc.blocks).toHaveLength(2);
+    expect(firstBlock.unexpected).toBeUndefined();
+    expect(secondBlock.items[0]?.unexpected).toBeUndefined();
+  });
+
+  it("honors validation unknown_keys passthrough mode", async () => {
+    const { doc } = await loadFixture("unknown-key-passthrough");
+    const docRecord = doc as unknown as Record<string, unknown>;
+    const block = doc.blocks[0] as unknown as { unexpected?: unknown; items: Array<Record<string, unknown>> };
+
+    expect(docRecord.unexpected).toBe("value");
+    expect(block.unexpected).toBe("value");
+    expect(block.items[0]?.unexpected).toBe("value");
+  });
+
+  it("uses passthrough semantics when strict is false and unknown_keys is error", async () => {
+    const { doc } = await loadFixture("strict-false");
+    const docRecord = doc as unknown as Record<string, unknown>;
+    const block = doc.blocks[0] as unknown as Record<string, unknown>;
+
+    expect(docRecord.unexpected).toBe("value");
+    expect(block.unexpected).toBe("value");
   });
 });
 
