@@ -1,0 +1,8 @@
+blocks:
+  - type: cards
+    title: Included Passthrough Block
+    unexpected: value
+    items:
+      - title: Included Card
+        body: Included item unknown keys should be retained in passthrough mode.
+        unexpected: value

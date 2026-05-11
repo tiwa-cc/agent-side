@@ -1,0 +1,23 @@
+[site]
+title = "include passthrough"
+lang = "en"
+entry = "docs/index.yml"
+out_dir = "dist"
+
+[renderer]
+name = "bootstrap"
+theme = "default"
+
+[renderer.mermaid]
+mode = "cdn"
+
+[include]
+base_dir = "docs"
+allow_parent = false
+
+[validation]
+strict = true
+unknown_keys = "passthrough"
+
+[theme]
+path = "themes/default.yml"

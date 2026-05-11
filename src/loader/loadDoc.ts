@@ -43,8 +43,7 @@ async function loadBlockFile(filePath: string, config: DocirConfig, stack: strin
     throw new DocirError(`Failed to read or parse included YAML: ${filePath}`, error);
   }
 
-  const filteredRaw = applyUnknownKeyPolicy(raw, config);
-  const blocks = Array.isArray(filteredRaw) ? filteredRaw : typeof filteredRaw === "object" && filteredRaw !== null && "blocks" in filteredRaw ? (filteredRaw as { blocks: unknown }).blocks : [filteredRaw];
+  const blocks = Array.isArray(raw) ? raw : typeof raw === "object" && raw !== null && "blocks" in raw ? (raw as { blocks: unknown }).blocks : [raw];
   const parsed = zodBlocks(blocks, filePath, config);
   return resolveBlocks(parsed, filePath, config, [...stack, filePath]);
 }

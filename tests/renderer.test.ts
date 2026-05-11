@@ -49,6 +49,14 @@ describe("fixture-based rendering", () => {
     expect(block.items[0]?.unexpected).toBe("value");
   });
 
+  it("honors validation unknown_keys passthrough mode in include files", async () => {
+    const { doc } = await loadFixture("include-passthrough");
+    const block = doc.blocks[0] as unknown as { unexpected?: unknown; items: Array<Record<string, unknown>> };
+
+    expect(block.unexpected).toBe("value");
+    expect(block.items[0]?.unexpected).toBe("value");
+  });
+
   it("uses passthrough semantics when strict is false and unknown_keys is error", async () => {
     const { doc } = await loadFixture("strict-false");
     const docRecord = doc as unknown as Record<string, unknown>;
