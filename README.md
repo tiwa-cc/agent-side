@@ -69,7 +69,8 @@ body: DocIR must not contain renderer-specific class names.
 
 The renderer decides how it should look.
 
-For example, a Bootstrap renderer may output an alert, while a Tailwind renderer may output a styled callout.
+For example, the current Bootstrap renderer may output an alert.
+A future Tailwind renderer could output a styled callout from the same DocIR.
 
 The agent should not write Bootstrap classes, Tailwind utility classes, inline styles, or arbitrary HTML layout.
 
@@ -83,7 +84,11 @@ agent-side is:
 * a renderer layer for human-readable review output
 * a safer alternative to letting agents edit raw HTML
 * a way to generate readable documents, reports, notes, and small static pages
-* a foundation for multiple render targets
+* a foundation for future render targets
+
+agent-side is currently under active implementation.
+The available renderer is Bootstrap HTML.
+Other render targets and some block types described below are design goals, not complete features yet.
 
 ---
 
@@ -124,8 +129,8 @@ page:
     - type: section
       title: Core Concept
       blocks:
-        - type: text
-          body: DocIR captures document meaning in YAML.
+        - type: paragraph
+          text: DocIR captures document meaning in YAML.
 
         - type: mermaid
           title: Generation Flow
@@ -229,11 +234,14 @@ The loader should detect:
 
 ## Rendering
 
-The same DocIR should be renderable into multiple targets.
+The same DocIR is intended to be renderable into multiple targets over time.
 
-Possible renderers include:
+Currently available:
 
 * Bootstrap HTML
+
+Planned or exploratory renderers:
+
 * Tailwind HTML
 * Plain HTML
 * PDF
@@ -242,7 +250,7 @@ Possible renderers include:
 * GitHub Pages
 * WordPress blocks
 
-The first renderer should be Bootstrap HTML.
+The first implemented renderer is Bootstrap HTML.
 
 ---
 
@@ -273,7 +281,18 @@ blocks:
     style: soft
 ```
 
-The renderer maps theme tokens to actual output-specific styles.
+Theme support is still being expanded.
+
+Currently applied by the Bootstrap renderer:
+
+* `tokens.accent`
+* `tokens.surface`
+* `tokens.text`
+* `blocks.page.container`
+* `blocks.section.spacing`
+
+Other theme fields in the example are accepted as forward-compatible design settings, but they are not all applied yet.
+The renderer maps implemented theme tokens to actual output-specific styles.
 
 DocIR may contain limited semantic layout hints such as:
 
@@ -318,11 +337,18 @@ DocIR stores the diagram source.
 
 The renderer decides how Mermaid is rendered.
 
-Supported Mermaid modes should be configurable:
+Mermaid mode is configurable, but only `cdn` is implemented today.
+
+Implemented:
 
 * `cdn`
+
+Accepted by configuration but not implemented yet:
+
 * `bundled`
 * `pre_rendered`
+
+Those unimplemented modes fail explicitly instead of silently producing incomplete output.
 
 Mermaid rendering failure should not break the entire document.
 
@@ -376,28 +402,25 @@ The validator should reject array-based table rows.
 
 ## Initial Block Types
 
-The architecture should allow these semantic block types:
+The architecture should allow these semantic block types.
 
-* `page`
+Currently implemented block types include:
+
 * `section`
-* `text`
+* `paragraph`
 * `summary`
 * `points`
-* `steps`
+* `list`
 * `notice`
 * `cards`
 * `table`
 * `compare`
-* `definition`
-* `glossary`
 * `keyValue`
 * `code`
 * `command`
 * `output`
-* `diff`
 * `fileTree`
 * `mermaid`
-* `figure`
 * `decision`
 * `todo`
 * `issue`
@@ -405,8 +428,20 @@ The architecture should allow these semantic block types:
 * `assumption`
 * `constraint`
 * `openQuestion`
+* `checklist`
 * `quote`
 * `reference`
+* `include`
+
+Planned or not fully implemented yet:
+
+* `page`
+* `text`
+* `steps`
+* `definition`
+* `glossary`
+* `diff`
+* `figure`
 * `linkList`
 
 The first implementation does not need to support all of them completely, but the architecture should allow them to be added cleanly.
@@ -495,7 +530,7 @@ Use stronger roles such as `role="alert"` only when the content should interrupt
 
 ## CLI Goals
 
-The CLI should eventually provide:
+The CLI currently provides:
 
 ```text
 agent-side init
@@ -503,6 +538,9 @@ agent-side validate
 agent-side render
 agent-side preview
 ```
+
+`preview` renders the document and serves the generated output locally.
+Automatic watching and live re-rendering are still planned.
 
 Expected usage:
 
@@ -518,7 +556,7 @@ agent-side preview
 
 Use TypeScript for the first implementation.
 
-Recommended libraries:
+Currently used libraries include:
 
 * `typescript`
 * `tsx`
@@ -526,16 +564,19 @@ Recommended libraries:
 * `yaml`
 * `smol-toml`
 * `commander`
-* `consola`
 * `pathe`
+* `html-escaper`
+* `sirv`
+* `vite`
+* `vitest`
+
+Planned or optional libraries under consideration:
+
+* `consola`
 * `fs-extra`
 * `chokidar`
 * `eta`
-* `html-escaper`
-* `sirv`
 * `mermaid`
-* `vite`
-* `vitest`
 * `happy-dom`
 * `eslint`
 * `prettier`
@@ -612,9 +653,12 @@ The renderer is responsible for:
 The preview system is responsible for:
 
 * serving generated HTML locally
-* optionally watching YAML, theme, and config changes
-* re-rendering on change
 * making human review easy
+
+Planned preview capabilities:
+
+* watching YAML, theme, and config changes
+* re-rendering on change
 
 ---
 
