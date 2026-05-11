@@ -1,0 +1,19 @@
+blocks:
+  - type: section
+    title: Core Concept
+    blocks:
+      - type: paragraph
+        text: DocIR captures document meaning in YAML. The loader resolves includes, validation checks structure, and the renderer converts the normalized document into readable HTML.
+      - type: mermaid
+        title: Generation Flow
+        diagram: |
+          flowchart TD
+            A[Agent or Human] --> B[DocIR YAML]
+            B --> C[Loader]
+            C --> D[Validator]
+            D --> E[Renderer]
+            E --> F[Readable HTML]
+      - type: decision
+        title: Primary Editing Target
+        decision: YAML DocIR is the source of truth.
+        rationale: Generated HTML is an artifact and should be easy to regenerate.

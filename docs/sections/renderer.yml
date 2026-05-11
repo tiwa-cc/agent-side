@@ -1,0 +1,33 @@
+blocks:
+  - type: section
+    title: Renderer Scope
+    blocks:
+      - type: table
+        title: Renderer Comparison
+        columns:
+          - key: renderer
+            label: Renderer
+          - key: merit
+            label: Merit
+          - key: concern
+            label: Concern
+        rows:
+          - renderer: Bootstrap
+            merit: Many components are available
+            concern: Appearance may feel Bootstrap-like
+          - renderer: Tailwind
+            merit: Flexible design
+            concern: Renderer needs more design rules
+      - type: cards
+        title: Supported Blocks
+        items:
+          - title: Notice
+            text: Semantic callouts with tone.
+          - title: Table
+            text: Key-value rows instead of position-dependent arrays.
+          - title: Mermaid
+            text: Diagram source stored in YAML and rendered by the renderer.
+      - type: risk
+        title: Presentation Leakage
+        risk: DocIR can become renderer-specific if classes or styles are allowed.
+        mitigation: Validation rejects presentation keys such as class, style, margin, padding, font-size, and color.

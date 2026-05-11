@@ -1,0 +1,13 @@
+title: agent-side sample
+description: A structured DocIR document rendered by the Bootstrap HTML renderer.
+blocks:
+  - type: notice
+    title: Editing Rule
+    tone: info
+    text: Agents edit YAML DocIR, not raw HTML or CSS.
+
+  - type: include
+    src: ./sections/concept.yml
+
+  - type: include
+    src: ./sections/renderer.yml
