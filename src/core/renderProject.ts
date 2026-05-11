@@ -16,8 +16,8 @@ export interface RenderProjectResult {
 }
 
 export async function renderProject(options: RenderProjectOptions = {}): Promise<RenderProjectResult> {
-  const { config, doc, theme } = await loadProject(options);
-  const outDir = resolve(process.cwd(), options.outDir ?? config.site.out_dir);
+  const { config, doc, theme, baseDir } = await loadProject(options);
+  const outDir = options.outDir ? resolve(process.cwd(), options.outDir) : resolve(baseDir, config.site.out_dir);
   const outFile = resolve(outDir, "index.html");
   const html = renderDocument(doc, { config, theme });
 

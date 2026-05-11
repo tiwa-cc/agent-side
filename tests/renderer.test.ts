@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolve } from "pathe";
 import { loadProject } from "../src/core/loadProject.js";
+import { renderProject } from "../src/core/renderProject.js";
 import { renderDocument } from "../src/renderer/bootstrap/renderDocument.js";
 
 const repoRoot = process.cwd();
@@ -80,6 +81,32 @@ describe("fixture-based rendering", () => {
       expect(baseDir).toBe(resolve(fixturesRoot, "minimal"));
       expect(doc.title).toBe("Minimal");
       expect(theme.name).toBe("default");
+    } finally {
+      process.chdir(previousCwd);
+    }
+  });
+
+  it("resolves configured site.out_dir relative to the config file", async () => {
+    const nestedConfig = resolve(fixturesRoot, "minimal/docir.toml");
+    const previousCwd = process.cwd();
+    process.chdir(repoRoot);
+    try {
+      const { outFile } = await renderProject({ configPath: nestedConfig });
+
+      expect(outFile).toBe(resolve(fixturesRoot, "minimal/dist/index.html"));
+    } finally {
+      process.chdir(previousCwd);
+    }
+  });
+
+  it("keeps explicit outDir relative to cwd", async () => {
+    const nestedConfig = resolve(fixturesRoot, "minimal/docir.toml");
+    const previousCwd = process.cwd();
+    process.chdir(repoRoot);
+    try {
+      const { outFile } = await renderProject({ configPath: nestedConfig, outDir: "tmp/render-out" });
+
+      expect(outFile).toBe(resolve(repoRoot, "tmp/render-out/index.html"));
     } finally {
       process.chdir(previousCwd);
     }
