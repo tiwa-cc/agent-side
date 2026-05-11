@@ -143,6 +143,10 @@ page:
           rationale: Generated HTML is an artifact and should be easy to regenerate.
 ```
 
+Screenshots
+
+![agent-side rendered preview](docs/assets/screenshots/index.png)
+
 ---
 
 ## Project Configuration
