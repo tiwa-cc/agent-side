@@ -1,0 +1,6 @@
+name: default
+renderer: bootstrap
+tokens:
+  accent: "#0d6efd"
+  surface: "#ffffff"
+  text: "#212529"

@@ -1,0 +1,7 @@
+title: agent-side document
+description: A structured DocIR document.
+blocks:
+  - type: notice
+    title: Start Here
+    tone: info
+    body: Edit this YAML file, then run agent-side render.

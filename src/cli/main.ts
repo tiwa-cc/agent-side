@@ -4,10 +4,16 @@ import { formatError } from "../utils/errors.js";
 import { renderCommand } from "./commands/render.js";
 import { validateCommand } from "./commands/validate.js";
 import { previewCommand } from "./commands/preview.js";
+import { initCommand } from "./commands/init.js";
 
 const program = new Command();
 
 program.name("agent-side").description("Render YAML DocIR documents to readable HTML").version("0.1.0");
+
+program
+  .command("init")
+  .option("-t, --target <dir>", "target directory", ".")
+  .action((options) => run(() => initCommand(options)));
 
 program
   .command("validate")

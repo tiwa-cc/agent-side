@@ -569,6 +569,176 @@ The preview system is responsible for:
 * re-rendering on change
 * making human review easy
 
+## Distribution and Library Design
+
+agent-side should be designed as both a CLI tool and a reusable library.
+
+The core implementation should be library-first.
+The CLI should be a thin wrapper around the core library APIs.
+
+### Initial distribution
+
+The first distribution target should be a single npm package named `agent-side`.
+
+The package should include:
+
+* CLI entrypoint
+* core library
+* YAML DocIR loader
+* TOML config loader
+* include resolver
+* validator
+* normalizer
+* Bootstrap renderer
+* default theme
+* init templates
+
+Users should be able to run:
+
+```bash
+npx agent-side init
+npx agent-side validate docs/index.yml
+npx agent-side render docs/index.yml --out dist
+npx agent-side preview
+```
+
+Users should also be able to install it as a development dependency:
+
+```bash
+pnpm add -D agent-side
+pnpm agent-side render
+```
+
+### Library usage
+
+The package should expose reusable APIs.
+
+Example:
+
+```ts
+import {
+  loadConfig,
+  loadDoc,
+  validateDoc,
+  normalizeDoc,
+  renderBootstrapHtml,
+} from "agent-side";
+
+const config = await loadConfig("docir.toml");
+const doc = await loadDoc({ entry: config.site.entry, config });
+const validDoc = validateDoc(doc, config);
+const ast = normalizeDoc(validDoc, config);
+const html = await renderBootstrapHtml(ast, config);
+```
+
+A higher-level API should also be provided:
+
+```ts
+import { renderProject } from "agent-side";
+
+await renderProject({
+  configPath: "docir.toml",
+});
+```
+
+The CLI should call these same library APIs internally.
+Do not duplicate render or validation logic inside CLI command handlers.
+
+### Package shape
+
+Recommended initial `package.json` shape:
+
+```json
+{
+  "name": "agent-side",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "agent-side": "./dist/cli/main.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./core": "./dist/core/index.js",
+    "./renderer/bootstrap": "./dist/renderer/bootstrap/index.js"
+  },
+  "files": [
+    "dist",
+    "templates",
+    "themes",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli/main.ts",
+    "test": "vitest",
+    "prepublishOnly": "pnpm build && pnpm test"
+  }
+}
+```
+
+### Internal structure
+
+The source tree should keep core logic separate from CLI and preview code.
+
+Recommended structure:
+
+```text
+src/
+  core/
+    renderProject.ts
+    validateProject.ts
+    loadProject.ts
+
+  config/
+  loader/
+  schema/
+  ast/
+
+  renderer/
+    bootstrap/
+
+  cli/
+  preview/
+```
+
+The CLI should depend on `core/`.
+The renderer should consume validated, normalized AST data.
+The preview system should also call core APIs instead of reimplementing loading or rendering.
+
+### Future package split
+
+Do not start with a multi-package monorepo unless it becomes necessary.
+
+Begin with one package:
+
+```text
+agent-side
+```
+
+If the project grows, it may later be split into:
+
+```text
+@agent-side/core
+@agent-side/cli
+@agent-side/renderer-bootstrap
+@agent-side/renderer-tailwind
+@agent-side/renderer-markdown
+@agent-side/preview
+```
+
+The initial architecture should make this split possible, but should not require it from day one.
+
+### Distribution principles
+
+* Prefer npm distribution first.
+* Keep the CLI thin.
+* Keep core logic reusable.
+* Keep renderer implementations replaceable.
+* Include templates and default themes in the published package.
+* Run build and tests before publishing.
+* Do not make generated `dist/` project output part of source control unless it is part of package build output.
+
 ## Testing
 
 Renderer snapshot tests should cover at least:

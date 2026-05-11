@@ -1,9 +1,27 @@
 {
   "name": "agent-side",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
   "packageManager": "pnpm@10.10.0",
+  "bin": {
+    "agent-side": "./dist/cli/main.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./core": "./dist/core/index.js",
+    "./renderer/bootstrap": "./dist/renderer/bootstrap/index.js"
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/index.html",
+    "templates",
+    "themes",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "dev": "tsx src/cli/main.ts",
     "validate": "tsx src/cli/main.ts validate docs/index.yml",
     "render": "tsx src/cli/main.ts render docs/index.yml --out dist",
@@ -12,7 +30,8 @@
     "test:update": "vitest run -u",
     "test:watch": "vitest --watch",
     "typecheck": "tsc --noEmit",
-    "format": "prettier -w ."
+    "format": "prettier -w .",
+    "prepublishOnly": "pnpm build && pnpm test"
   },
   "dependencies": {
     "commander": "^12.1.0",
