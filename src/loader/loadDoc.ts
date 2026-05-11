@@ -9,13 +9,17 @@ import { type DocirConfig } from "../config/configSchema.js";
 import { DocirError } from "../utils/errors.js";
 import { resolveInclude } from "./resolveInclude.js";
 
-export async function loadDoc(entry: string, config: DocirConfig): Promise<DocIR> {
-  const rootDir = process.cwd();
-  const entryPath = resolve(rootDir, entry);
-  return normalizeDoc(await loadDocFile(entryPath, config, []));
+export interface LoadDocOptions {
+  baseDir?: string;
 }
 
-async function loadDocFile(filePath: string, config: DocirConfig, stack: string[]): Promise<DocIR> {
+export async function loadDoc(entry: string, config: DocirConfig, options: LoadDocOptions = {}): Promise<DocIR> {
+  const rootDir = options.baseDir ?? process.cwd();
+  const entryPath = resolve(rootDir, entry);
+  return normalizeDoc(await loadDocFile(entryPath, config, [], rootDir));
+}
+
+async function loadDocFile(filePath: string, config: DocirConfig, stack: string[], rootDir: string): Promise<DocIR> {
   if (stack.includes(filePath)) {
     throw new DocirError(`Circular include detected: ${[...stack, filePath].join(" -> ")}`);
   }
@@ -28,10 +32,10 @@ async function loadDocFile(filePath: string, config: DocirConfig, stack: string[
   }
 
   const doc = parseDocFile(raw, filePath, config);
-  return { ...doc, blocks: await resolveBlocks(doc.blocks, filePath, config, [...stack, filePath]) };
+  return { ...doc, blocks: await resolveBlocks(doc.blocks, filePath, config, [...stack, filePath], rootDir) };
 }
 
-async function loadBlockFile(filePath: string, config: DocirConfig, stack: string[]): Promise<Block[]> {
+async function loadBlockFile(filePath: string, config: DocirConfig, stack: string[], rootDir: string): Promise<Block[]> {
   if (stack.includes(filePath)) {
     throw new DocirError(`Circular include detected: ${[...stack, filePath].join(" -> ")}`);
   }
@@ -45,7 +49,7 @@ async function loadBlockFile(filePath: string, config: DocirConfig, stack: strin
 
   const blocks = Array.isArray(raw) ? raw : typeof raw === "object" && raw !== null && "blocks" in raw ? (raw as { blocks: unknown }).blocks : [raw];
   const parsed = zodBlocks(blocks, filePath, config);
-  return resolveBlocks(parsed, filePath, config, [...stack, filePath]);
+  return resolveBlocks(parsed, filePath, config, [...stack, filePath], rootDir);
 }
 
 function zodBlocks(value: unknown, filePath: string, config: DocirConfig): Block[] {
@@ -133,6 +137,8 @@ const blockKeys: Record<string, Set<string>> = {
 const itemKeys: Record<string, Record<string, Set<string>>> = {
   cards: { items: new Set(["title", "text", "body", "href", "badge"]) },
   keyValue: { items: new Set(["key", "value"]) },
+  table: { columns: new Set(["key", "label"]) },
+  todo: { items: new Set(["id", "title", "status", "priority"]) },
   checklist: { items: new Set(["label", "checked"]) },
   reference: { items: new Set(["label", "path"]) },
   fileTree: { items: new Set(["path", "description"]) },
@@ -208,18 +214,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-async function resolveBlocks(blocks: Block[], fromFile: string, config: DocirConfig, stack: string[]): Promise<Block[]> {
+async function resolveBlocks(blocks: Block[], fromFile: string, config: DocirConfig, stack: string[], rootDir: string): Promise<Block[]> {
   const resolved: Block[] = [];
   for (const block of blocks) {
     if (block.type === "include") {
       const includePath = await resolveInclude(fromFile, block.src, {
-        rootDir: process.cwd(),
+        rootDir,
         baseDir: config.include.base_dir,
         allowParent: config.include.allow_parent,
       });
-      resolved.push(...(await loadBlockFile(includePath, config, stack)));
+      resolved.push(...(await loadBlockFile(includePath, config, stack, rootDir)));
     } else if (block.type === "section") {
-      resolved.push({ ...block, blocks: await resolveBlocks(block.blocks, fromFile, config, stack) });
+      resolved.push({ ...block, blocks: await resolveBlocks(block.blocks, fromFile, config, stack, rootDir) });
     } else {
       resolved.push(block);
     }

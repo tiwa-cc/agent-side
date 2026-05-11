@@ -32,11 +32,15 @@ describe("fixture-based rendering", () => {
     const { doc } = await loadFixture("unknown-key-strip");
     const firstBlock = doc.blocks[0] as Record<string, unknown>;
     const secondBlock = doc.blocks[1] as { items: Array<Record<string, unknown>> };
+    const thirdBlock = doc.blocks[2] as { items: Array<Record<string, unknown>> };
+    const fourthBlock = doc.blocks[3] as { columns: Array<Record<string, unknown>> };
 
     expect(doc.title).toBe("Unknown Key Strip");
-    expect(doc.blocks).toHaveLength(2);
+    expect(doc.blocks).toHaveLength(4);
     expect(firstBlock.unexpected).toBeUndefined();
     expect(secondBlock.items[0]?.unexpected).toBeUndefined();
+    expect(thirdBlock.items[0]?.unexpected).toBeUndefined();
+    expect(fourthBlock.columns[0]?.unexpected).toBeUndefined();
   });
 
   it("honors validation unknown_keys passthrough mode", async () => {
@@ -64,6 +68,21 @@ describe("fixture-based rendering", () => {
 
     expect(docRecord.unexpected).toBe("value");
     expect(block.unexpected).toBe("value");
+  });
+
+  it("resolves entry, theme, and include.base_dir relative to the config file", async () => {
+    const nestedConfig = resolve(fixturesRoot, "minimal/docir.toml");
+    const previousCwd = process.cwd();
+    process.chdir(repoRoot);
+    try {
+      const { doc, theme, baseDir } = await loadProject({ configPath: nestedConfig });
+
+      expect(baseDir).toBe(resolve(fixturesRoot, "minimal"));
+      expect(doc.title).toBe("Minimal");
+      expect(theme.name).toBe("default");
+    } finally {
+      process.chdir(previousCwd);
+    }
   });
 });
 

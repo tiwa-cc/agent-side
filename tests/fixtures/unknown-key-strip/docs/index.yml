@@ -11,3 +11,17 @@ blocks:
       - title: Card
         body: Nested unknown keys should be stripped before strict item validation.
         unexpected: value
+  - type: todo
+    title: Strip Todo Passthrough Item Key
+    items:
+      - title: Task
+        status: todo
+        unexpected: value
+  - type: table
+    title: Strip Table Column Passthrough Key
+    columns:
+      - key: name
+        label: Name
+        unexpected: value
+    rows:
+      - name: Example
