@@ -569,6 +569,151 @@ The preview system is responsible for:
 * re-rendering on change
 * making human review easy
 
+## Testing
+
+Renderer snapshot tests should cover at least:
+
+* notice
+* section
+* mermaid
+* decision
+* table
+* cards
+* risk
+* include-resolved documents
+* nested heading structures
+
+Snapshot tests should verify stable HTML output and prevent accidental renderer regressions.
+
+### Fixture-based tests
+
+Test inputs should be stored as fixtures under `tests/fixtures/`.
+
+Recommended structure:
+
+```text
+tests/
+  fixtures/
+    minimal/
+      docir.toml
+      docs/
+        index.yml
+      themes/
+        default.yml
+
+    complex/
+      docir.toml
+      docs/
+        index.yml
+      themes/
+        default.yml
+
+    invalid-table-array/
+      docir.toml
+      docs/
+        index.yml
+      themes/
+        default.yml
+
+    invalid-presentation-keys/
+      docir.toml
+      docs/
+        index.yml
+      themes/
+        default.yml
+
+    include-cycle/
+      docir.toml
+      docs/
+        index.yml
+        a.yml
+        b.yml
+      themes/
+        default.yml
+
+    nested-headings/
+      docir.toml
+      docs/
+        index.yml
+      themes/
+        default.yml
+```
+
+Each fixture should be self-contained and include its own `docir.toml`, entry YAML file, and theme file.
+
+### Fixture purposes
+
+Use separate fixtures for separate test purposes.
+
+* `minimal`: verifies that the smallest valid document can be loaded, validated, normalized, and rendered.
+* `complex`: verifies that many block types can be rendered together in a stable document.
+* `invalid-table-array`: verifies that two-dimensional table rows are rejected.
+* `invalid-presentation-keys`: verifies that forbidden keys such as `class`, `style`, `margin`, `padding`, `font-size`, and `color` are rejected.
+* `include-cycle`: verifies that circular includes are detected and reported.
+* `nested-headings`: verifies that heading levels are generated correctly for nested sections and blocks.
+
+The complex fixture should be treated as the normal-path integration fixture.
+It should include nested sections, tables, compare blocks, cards, Mermaid diagrams, decisions, risks, assumptions, constraints, open questions, file trees, commands, outputs, and checklist-like content.
+
+### Snapshot test flow
+
+A renderer snapshot test should follow this flow:
+
+```text
+fixture directory
+  ↓
+load docir.toml
+  ↓
+load entry YAML
+  ↓
+resolve includes
+  ↓
+validate
+  ↓
+normalize
+  ↓
+render HTML
+  ↓
+compare with snapshot
+```
+
+The renderer should receive a validated, normalized AST.
+Tests should avoid passing raw YAML directly into the renderer.
+
+### Negative tests
+
+Invalid fixtures should assert that validation or loading fails with a readable error.
+
+Negative test cases should include at least:
+
+* array-based table rows
+* forbidden presentation keys
+* missing include file
+* include cycle
+* parent directory traversal when disabled
+* unknown block type in strict mode
+* unknown keys in strict mode
+
+Negative tests should verify not only that an error occurs, but also that the error message identifies the file, block, or field that caused the problem when possible.
+
+### Snapshot updates
+
+Use explicit snapshot update commands when output changes are intentional.
+
+Recommended scripts:
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:update": "vitest -u",
+    "test:watch": "vitest --watch"
+  }
+}
+```
+
+Use `pnpm test:update` only when renderer output changes are expected and reviewed.
+
 ## Non-Goals
 
 This project is not:

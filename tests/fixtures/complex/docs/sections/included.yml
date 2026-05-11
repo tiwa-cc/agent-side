@@ -1,0 +1,5 @@
+blocks:
+  - type: notice
+    title: Included Section
+    tone: success
+    body: This block comes from an included YAML file.

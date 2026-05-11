@@ -1,0 +1,23 @@
+[site]
+title = "parent traversal"
+lang = "en"
+entry = "docs/index.yml"
+out_dir = "dist"
+
+[renderer]
+name = "bootstrap"
+theme = "default"
+
+[renderer.mermaid]
+mode = "cdn"
+
+[include]
+base_dir = "docs"
+allow_parent = false
+
+[validation]
+strict = true
+unknown_keys = "error"
+
+[theme]
+path = "themes/default.yml"

@@ -1,0 +1,9 @@
+title: Invalid Table Array
+blocks:
+  - type: table
+    title: Bad Table
+    columns:
+      - key: name
+        label: Name
+    rows:
+      - [Bootstrap, easy, good]

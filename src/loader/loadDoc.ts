@@ -3,7 +3,7 @@ import { parse } from "yaml";
 import { resolve } from "pathe";
 import { type Block, type DocIR } from "../ast/types.js";
 import { normalizeDoc } from "../ast/normalize.js";
-import { docSchema } from "../schema/docSchema.js";
+import { docFileSchema, docSchema } from "../schema/docSchema.js";
 import { blockSchema } from "../schema/blockSchemas.js";
 import { type DocirConfig } from "../config/configSchema.js";
 import { DocirError } from "../utils/errors.js";
@@ -27,7 +27,7 @@ async function loadDocFile(filePath: string, config: DocirConfig, stack: string[
     throw new DocirError(`Failed to read or parse YAML: ${filePath}`, error);
   }
 
-  const doc = docSchema.parse(raw) as DocIR;
+  const doc = parseDocFile(raw, filePath);
   return { ...doc, blocks: await resolveBlocks(doc.blocks, filePath, config, [...stack, filePath]) };
 }
 
@@ -50,7 +50,30 @@ async function loadBlockFile(filePath: string, config: DocirConfig, stack: strin
 
 function zodBlocks(value: unknown, filePath: string): Block[] {
   if (!Array.isArray(value)) throw new DocirError(`Included file must contain a block or blocks array: ${filePath}`);
-  return value.map((item) => blockSchema.parse(item) as Block);
+  return value.map((item, index) => parseBlock(item, filePath, index));
+}
+
+function parseDocFile(value: unknown, filePath: string): DocIR {
+  const candidate =
+    value && typeof value === "object" && !Array.isArray(value) && "page" in value
+      ? docFileSchema.safeParse(value)
+      : docSchema.safeParse(value);
+  if (!candidate.success) {
+    throw new DocirError(`Invalid DocIR document in ${filePath}: ${formatIssues(candidate.error.issues)}`);
+  }
+  return candidate.data as DocIR;
+}
+
+function parseBlock(value: unknown, filePath: string, index: number): Block {
+  const result = blockSchema.safeParse(value);
+  if (!result.success) {
+    throw new DocirError(`Invalid included block in ${filePath} at index ${index}: ${formatIssues(result.error.issues)}`);
+  }
+  return result.data as Block;
+}
+
+function formatIssues(issues: Array<{ path: Array<string | number>; message: string }>): string {
+  return issues.map((issue) => `${issue.path.join(".") || "block"} ${issue.message}`).join(", ");
 }
 
 async function resolveBlocks(blocks: Block[], fromFile: string, config: DocirConfig, stack: string[]): Promise<Block[]> {

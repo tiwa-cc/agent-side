@@ -1,0 +1,6 @@
+title: Invalid Presentation Keys
+blocks:
+  - type: notice
+    title: Bad Notice
+    body: This block leaks presentation.
+    class: alert-primary

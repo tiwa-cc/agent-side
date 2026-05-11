@@ -1,0 +1,425 @@
+page:
+  title: agent-side implementation review
+  lang: en
+  lead: A complex DocIR sample for validating renderer behavior, nested structures, semantic blocks, and AI-safe document editing.
+
+  blocks:
+    - type: include
+      src: ./sections/included.yml
+
+    - type: notice
+      tone: info
+      title: Review Context
+      body: This document is intentionally complex. It is used to test whether the renderer can produce stable, readable HTML from structured YAML without relying on raw HTML or presentation-specific fields.
+
+    - type: section
+      title: Project Overview
+      blocks:
+        - type: summary
+          title: Summary
+          body: agent-side is an AI-safe document rendering layer. Agents edit structured YAML DocIR, while renderers generate human-readable HTML for review.
+
+        - type: keyValue
+          title: Project Facts
+          items:
+            - key: Project name
+              value: agent-side
+            - key: Primary editing format
+              value: YAML DocIR
+            - key: Configuration format
+              value: TOML
+            - key: First renderer
+              value: Bootstrap HTML
+            - key: Human review target
+              value: Browser-rendered HTML
+            - key: Main design goal
+              value: Prevent AI agents from breaking document structure and presentation
+
+        - type: points
+          title: Core Principles
+          items:
+            - Agents write meaning, not presentation.
+            - Generated HTML is an artifact, not the source of truth.
+            - Renderer-specific classes and styles must stay outside DocIR.
+            - Complex documents should be split into YAML files and resolved by the loader.
+            - The renderer should receive a normalized AST, not raw file fragments.
+
+    - type: section
+      title: Architecture
+      blocks:
+        - type: mermaid
+          title: Document Generation Pipeline
+          diagram: |
+            flowchart TD
+              A[Agent or Human] --> B[DocIR YAML]
+              B --> C[Loader]
+              C --> D[Include Resolver]
+              D --> E[Validator]
+              E --> F[Normalizer]
+              F --> G[Renderer]
+              G --> H[Readable HTML]
+              H --> I[Browser Review]
+
+        - type: cards
+          title: Main Components
+          layout: 3col
+          items:
+            - title: Loader
+              body: Reads YAML files, resolves include blocks, and prevents invalid paths or circular references.
+              badge: input
+            - title: Validator
+              body: Checks block types, required fields, forbidden presentation keys, and table row shape.
+              badge: safety
+            - title: Normalizer
+              body: Converts validated DocIR into a stable internal AST with defaults applied.
+              badge: structure
+            - title: Renderer
+              body: Converts the normalized AST into readable HTML using theme tokens and renderer rules.
+              badge: output
+            - title: Theme
+              body: Stores visual decisions outside DocIR so agents cannot freely modify presentation details.
+              badge: external
+            - title: Preview
+              body: Serves generated output locally and helps humans review changes in a browser.
+              badge: review
+
+        - type: decision
+          title: Source of Truth
+          decision: YAML DocIR is the source of truth.
+          rationale: HTML should be regenerated from structured meaning so that agents do not directly mutate fragile presentation output.
+
+    - type: section
+      title: Renderer Comparison
+      blocks:
+        - type: table
+          title: Renderer Options
+          columns:
+            - key: renderer
+              label: Renderer
+              kind: text
+              required: true
+            - key: strength
+              label: Strength
+              kind: text
+            - key: concern
+              label: Concern
+              kind: text
+            - key: priority
+              label: Priority
+              kind: badge
+              values:
+                - high
+                - medium
+                - low
+          rows:
+            - renderer: Bootstrap HTML
+              strength: Many ready-made components are available, making early output readable with little custom CSS.
+              concern: The default appearance may feel Bootstrap-like unless themes are improved.
+              priority: high
+            - renderer: Tailwind HTML
+              strength: Flexible visual design and suitable for custom themes.
+              concern: Requires more renderer-side design rules because Tailwind is utility-first.
+              priority: medium
+            - renderer: Plain HTML
+              strength: Minimal dependency and simple output.
+              concern: Readability depends heavily on custom CSS.
+              priority: medium
+            - renderer: Markdown
+              strength: Useful for exporting back to documentation systems.
+              concern: Some semantic blocks may lose structure when converted to Markdown.
+              priority: low
+            - renderer: PDF
+              strength: Useful for reports, proposals, and archival documents.
+              concern: Mermaid and layout handling may require pre-rendering or a browser-based export path.
+              priority: low
+
+        - type: compare
+          title: Bootstrap vs Tailwind for the First Renderer
+          items:
+            - name: Bootstrap
+              status: recommended
+              summary: Best first target because common document components can be mapped quickly.
+              pros:
+                - Alerts, cards, tables, accordions, and grids are already available.
+                - The generated HTML becomes readable early.
+                - Snapshot tests can focus on semantic mapping instead of design details.
+              cons:
+                - The appearance may look generic.
+                - Advanced customization should be moved into themes.
+            - name: Tailwind
+              status: later
+              summary: Useful after renderer contracts and theme tokens are more stable.
+              pros:
+                - Good for custom design systems.
+                - Works well with token-based rendering.
+              cons:
+                - Requires more mapping rules.
+                - It is easier for presentation concerns to leak into DocIR if boundaries are weak.
+
+    - type: section
+      title: Validation Rules
+      blocks:
+        - type: notice
+          tone: warning
+          title: Presentation Keys Are Forbidden
+          body: DocIR must reject fields such as class, style, margin, padding, font-size, and color. These belong to the renderer or theme layer.
+
+        - type: table
+          title: Forbidden Keys
+          columns:
+            - key: key
+              label: Key
+            - key: reason
+              label: Reason
+            - key: replacement
+              label: Preferred Alternative
+          rows:
+            - key: class
+              reason: Leaks renderer-specific implementation details into DocIR.
+              replacement: Use semantic block type, tone, layout, or theme tokens.
+            - key: style
+              reason: Allows arbitrary presentation changes and makes output unstable.
+              replacement: Use external theme configuration.
+            - key: margin
+              reason: Introduces pixel-level layout control into a semantic document.
+              replacement: Use renderer spacing tokens.
+            - key: padding
+              reason: Couples document meaning to visual layout.
+              replacement: Use theme-defined block spacing.
+            - key: color
+              reason: Allows agents to bypass tone and theme rules.
+              replacement: Use tone such as info, warning, danger, success, or neutral.
+
+        - type: risk
+          title: Validator Drift
+          risk: The schema may become too permissive as more blocks are added.
+          impact: high
+          mitigation: Keep strict mode enabled by default and add snapshot tests for every new block type.
+
+        - type: constraint
+          title: No Two-Dimensional Table Rows
+          items:
+            - Table rows must be key-value objects.
+            - Position-dependent array rows are not allowed.
+            - Columns define display order, but row values must be addressed by keys.
+
+    - type: section
+      title: Include and File Splitting
+      blocks:
+        - type: summary
+          body: Large documents should be split into smaller YAML files. Include resolution should happen before validation or before final AST normalization, depending on implementation details.
+
+        - type: fileTree
+          title: Recommended Project Structure
+          root: agent-side
+          items:
+            - path: docir.toml
+              description: Project configuration, renderer selection, include policy, validation mode, and theme path.
+            - path: docs/index.yml
+              description: Entry DocIR document.
+            - path: docs/sections/concept.yml
+              description: Included section file.
+            - path: docs/sections/renderer.yml
+              description: Included renderer design section.
+            - path: themes/default.yml
+              description: Default external theme tokens.
+            - path: dist/index.html
+              description: Generated review HTML.
+            - path: src/
+              description: TypeScript source code.
+            - path: tests/
+              description: Fixtures and snapshot tests.
+
+        - type: points
+          title: Include Resolver Requirements
+          items:
+            - Resolve paths relative to the including file.
+            - Reject parent traversal when allow_parent is false.
+            - Detect circular includes.
+            - Report missing files with readable error messages.
+            - Preserve enough source location information for debugging.
+            - Return a tree that the renderer can consume without knowing file boundaries.
+
+        - type: openQuestion
+          title: Include Validation Timing
+          question: Should included files be validated individually before merge, or should the merged document be validated as a whole?
+          context: Individual validation gives better local errors. Whole-document validation makes cross-block rules easier.
+
+    - type: section
+      title: Mermaid Handling
+      blocks:
+        - type: mermaid
+          title: Include Resolution with Cycle Detection
+          diagram: |
+            flowchart LR
+              A[index.yml] --> B[concept.yml]
+              A --> C[renderer.yml]
+              B --> D[principles.yml]
+              C --> D
+              D -. invalid .-> A
+
+        - type: notice
+          tone: caution
+          title: Mermaid Failure Must Not Break the Page
+          body: Mermaid rendering is useful but optional. If Mermaid fails, the document should still remain readable and the original diagram source should be visible.
+
+        - type: decision
+          title: Mermaid Ownership
+          decision: Mermaid source belongs to DocIR, but Mermaid rendering belongs to the renderer.
+          rationale: Different output targets may use CDN rendering, bundled rendering, pre-rendered SVG, or plain source fallback.
+
+        - type: compare
+          title: Mermaid Rendering Modes
+          items:
+            - name: cdn
+              status: default-for-preview
+              summary: Load Mermaid from a CDN in generated HTML.
+              pros:
+                - Simple implementation
+                - Small generated output
+              cons:
+                - Requires network access
+                - Not ideal for offline distribution
+            - name: bundled
+              status: distribution
+              summary: Copy Mermaid assets into the output directory.
+              pros:
+                - Works offline
+                - Reproducible distribution
+              cons:
+                - Larger output
+                - Asset management is required
+            - name: pre_rendered
+              status: future
+              summary: Convert diagrams to SVG or PNG during rendering.
+              pros:
+                - Suitable for PDF and static archives
+                - Runtime JavaScript is unnecessary
+              cons:
+                - Build pipeline becomes heavier
+                - Error handling must happen at render time
+
+    - type: section
+      title: CLI Behavior
+      blocks:
+        - type: command
+          title: Validate Document
+          shell: bash
+          command: |
+            agent-side validate docs/index.yml
+
+        - type: output
+          title: Expected Validation Output
+          body: |
+            Loaded config: docir.toml
+            Entry: docs/index.yml
+            Includes resolved: 3
+            Blocks validated: 42
+            Result: valid
+
+        - type: command
+          title: Render Document
+          shell: bash
+          command: |
+            agent-side render docs/index.yml --out dist
+
+        - type: output
+          title: Expected Render Output
+          body: |
+            Loaded theme: themes/default.yml
+            Renderer: bootstrap
+            Mermaid mode: cdn
+            Wrote: dist/index.html
+
+        - type: todo
+          title: CLI Implementation Tasks
+          items:
+            - id: cli-init
+              title: Implement agent-side init
+              status: todo
+              priority: medium
+            - id: cli-validate
+              title: Implement agent-side validate
+              status: in_progress
+              priority: high
+            - id: cli-render
+              title: Implement agent-side render
+              status: in_progress
+              priority: high
+            - id: cli-preview
+              title: Implement agent-side preview
+              status: todo
+              priority: medium
+
+    - type: section
+      title: Review Notes
+      blocks:
+        - type: assumption
+          title: Assumptions
+          items:
+            - The first implementation is written in TypeScript.
+            - The first renderer outputs Bootstrap HTML.
+            - The primary human review interface is a browser.
+            - YAML remains the editable DocIR format.
+            - TOML remains the project configuration format.
+
+        - type: risk
+          title: Overfitting to Bootstrap
+          risk: If Bootstrap concepts leak into DocIR, future renderers will become harder to implement.
+          impact: medium
+          mitigation: Keep Bootstrap class names inside the Bootstrap renderer and only expose semantic fields in DocIR.
+
+        - type: issue
+          title: Heading Depth Needs Care
+          body: Nested sections and block titles must not all render as h2. The renderer should track depth and generate h2, h3, h4, or lower headings as appropriate.
+
+        - type: openQuestion
+          title: Theme Token Scope
+          question: How much layout control should themes have before they become another CSS abstraction layer?
+          context: The theme system should support readable output without allowing arbitrary presentation mutation by agents.
+
+        - type: decision
+          title: Snapshot Tests
+          decision: Renderer snapshot tests should be added for notice, section, mermaid, decision, table, cards, risk, include-resolved documents, and nested heading structures.
+          rationale: Stable snapshots help detect accidental output regressions when block renderers are changed.
+
+    - type: section
+      title: Final Human Review Checklist
+      blocks:
+        - type: checklist
+          title: Renderer Review Checklist
+          items:
+            - label: HTML language is configurable and not hard-coded.
+              checked: false
+            - label: Heading hierarchy is semantically correct.
+              checked: false
+            - label: Class output has no empty tokens or trailing spaces.
+              checked: false
+            - label: Tables use key-value rows.
+              checked: true
+            - label: Mermaid diagrams have fallback behavior.
+              checked: false
+            - label: Forbidden presentation keys are rejected.
+              checked: true
+            - label: Bootstrap details do not leak into DocIR.
+              checked: true
+            - label: Include cycles are detected.
+              checked: false
+            - label: Snapshot tests cover complex nested documents.
+              checked: false
+
+        - type: quote
+          title: Working Definition
+          body: Agents should write structured meaning. Renderers should create human-readable output. Humans should review the result in a browser.
+
+        - type: reference
+          title: Related Files
+          items:
+            - label: Project goal
+              path: docs/goal.md
+            - label: Entry document
+              path: docs/index.yml
+            - label: Default theme
+              path: themes/default.yml
+            - label: Renderer implementation
+              path: src/renderer/bootstrap/

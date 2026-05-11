@@ -9,3 +9,20 @@ export const docSchema = z
     blocks: z.array(blockSchema).default([]),
   })
   .strict();
+
+export const docFileSchema = z.union([
+  docSchema,
+  z
+    .object({
+      page: docSchema.extend({
+        lead: z.string().optional(),
+      }),
+    })
+    .strict()
+    .transform(({ page }) => ({
+      title: page.title,
+      lang: page.lang,
+      description: page.description ?? page.lead,
+      blocks: page.blocks,
+    })),
+]);

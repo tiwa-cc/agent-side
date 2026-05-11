@@ -1,0 +1,4 @@
+title: Missing Include
+blocks:
+  - type: include
+    src: ./missing.yml
