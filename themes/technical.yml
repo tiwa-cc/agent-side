@@ -1,0 +1,6 @@
+name: technical
+renderer: bootstrap
+tokens:
+  accent: "#198754"
+  surface: "#ffffff"
+  text: "#212529"
