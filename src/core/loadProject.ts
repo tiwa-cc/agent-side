@@ -1,7 +1,9 @@
 import { loadConfig } from "../config/loadConfig.js";
+import { loadTheme } from "../config/loadTheme.js";
 import { loadDoc } from "../loader/loadDoc.js";
 import type { DocIR } from "../ast/types.js";
 import type { DocirConfig } from "../config/configSchema.js";
+import type { DocirTheme } from "../schema/themeSchema.js";
 
 export interface LoadProjectOptions {
   configPath?: string;
@@ -11,10 +13,15 @@ export interface LoadProjectOptions {
 export interface LoadedProject {
   config: DocirConfig;
   doc: DocIR;
+  theme: DocirTheme;
 }
 
 export async function loadProject(options: LoadProjectOptions = {}): Promise<LoadedProject> {
   const config = await loadConfig(options.configPath);
+  const theme = await loadTheme(config.theme.path);
+  if (theme.name !== config.renderer.theme) {
+    throw new Error(`Configured renderer.theme "${config.renderer.theme}" does not match loaded theme "${theme.name}"`);
+  }
   const doc = await loadDoc(options.entry ?? config.site.entry, config);
-  return { config, doc };
+  return { config, doc, theme };
 }

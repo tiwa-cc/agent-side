@@ -1,0 +1,23 @@
+[site]
+title = "unknown key strip"
+lang = "en"
+entry = "docs/index.yml"
+out_dir = "dist"
+
+[renderer]
+name = "bootstrap"
+theme = "default"
+
+[renderer.mermaid]
+mode = "cdn"
+
+[include]
+base_dir = "docs"
+allow_parent = false
+
+[validation]
+strict = false
+unknown_keys = "strip"
+
+[theme]
+path = "themes/default.yml"

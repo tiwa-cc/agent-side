@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolve } from "pathe";
-import { loadConfig } from "../src/config/loadConfig.js";
-import { loadDoc } from "../src/loader/loadDoc.js";
+import { loadProject } from "../src/core/loadProject.js";
 import { renderDocument } from "../src/renderer/bootstrap/renderDocument.js";
 
 const repoRoot = process.cwd();
@@ -13,6 +12,7 @@ describe("fixture-based rendering", () => {
 
     expect(html).toContain("<h1>Minimal</h1>");
     expect(html).toContain('<html lang="en">');
+    expect(html).toContain('<main class="doc-shell doc-shell-lg">');
     expect(html).toMatchSnapshot();
   });
 
@@ -26,6 +26,46 @@ describe("fixture-based rendering", () => {
     expect(html).not.toContain('class=""');
     expect(html).not.toMatch(/class="[^"]*\s+"/);
     expect(html).toMatchSnapshot();
+  });
+
+  it("honors validation unknown_keys strip mode", async () => {
+    const { doc } = await loadFixture("unknown-key-strip");
+
+    expect(doc.title).toBe("Unknown Key Strip");
+    expect(doc.blocks).toHaveLength(1);
+  });
+});
+
+describe("renderer safety", () => {
+  it("rejects unsupported Mermaid modes instead of silently degrading", async () => {
+    const { config, doc, theme } = await loadFixture("minimal");
+    config.renderer.mermaid.mode = "bundled";
+
+    expect(() => renderDocument(doc, { config, theme })).toThrow(/bundled Mermaid assets are not implemented/);
+  });
+
+  it("does not render unsafe link schemes", async () => {
+    const { config, theme } = await loadFixture("minimal");
+    const html = renderDocument(
+      {
+        title: "Links",
+        blocks: [
+          {
+            type: "cards",
+            items: [{ title: "Unsafe card", href: "javascript:alert(1)" }],
+          },
+          {
+            type: "reference",
+            items: [{ label: "Unsafe reference", path: "javascript:alert(1)" }],
+          },
+        ],
+      },
+      { config, theme },
+    );
+
+    expect(html).not.toContain("javascript:");
+    expect(html).not.toContain('<a href="');
+    expect(html).toContain("Unsafe reference");
   });
 });
 
@@ -44,8 +84,8 @@ describe("fixture-based validation failures", () => {
 });
 
 async function renderFixture(name: string): Promise<{ html: string }> {
-  const { config, doc } = await loadFixture(name);
-  return { html: renderDocument(doc, { config }) };
+  const { config, doc, theme } = await loadFixture(name);
+  return { html: renderDocument(doc, { config, theme }) };
 }
 
 async function loadFixture(name: string) {
@@ -53,9 +93,7 @@ async function loadFixture(name: string) {
   const previousCwd = process.cwd();
   process.chdir(fixtureRoot);
   try {
-    const config = await loadConfig("docir.toml");
-    const doc = await loadDoc(config.site.entry, config);
-    return { config, doc };
+    return await loadProject({ configPath: "docir.toml" });
   } finally {
     process.chdir(previousCwd);
   }

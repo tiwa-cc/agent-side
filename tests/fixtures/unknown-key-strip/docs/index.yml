@@ -1,0 +1,7 @@
+title: Unknown Key Strip
+unexpected: value
+blocks:
+  - type: notice
+    title: Strip Block Key
+    body: Unknown keys should not fail in strip mode.
+    unexpected: value

@@ -33,6 +33,7 @@ program
   .argument("[entry]", "DocIR entry YAML")
   .option("-o, --out <dir>", "output directory")
   .option("-c, --config <path>", "config path", "docir.toml")
+  .option("-p, --port <port>", "preview port", "4173")
   .action((entry, options) => run(() => previewCommand(entry, options)));
 
 await program.parseAsync(process.argv);

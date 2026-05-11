@@ -1,5 +1,5 @@
 import { realpath } from "node:fs/promises";
-import { dirname, isAbsolute, normalize, resolve } from "pathe";
+import { dirname, isAbsolute, normalize, relative, resolve } from "pathe";
 import { DocirError } from "../utils/errors.js";
 
 export interface IncludeResolverOptions {
@@ -19,7 +19,8 @@ export async function resolveInclude(
   if (!options.allowParent) {
     const base = await realpath(resolve(options.rootDir, options.baseDir));
     const target = normalize(resolve(normalized));
-    if (!target.startsWith(base)) {
+    const fromBase = relative(base, target);
+    if (fromBase === ".." || fromBase.startsWith("../") || fromBase.startsWith("..\\")) {
       throw new DocirError(`Include escapes base_dir: ${src}`);
     }
   }

@@ -45,7 +45,7 @@ export function renderBlock(block: Block, state: BlockRenderState): string {
       return `<section>${renderTitle(block.title, state.headingLevel)}<div class="row g-3">${block.items
         .map(
           (item) =>
-            `<div class="col-md-4"><article class="card h-100"><div class="card-body">${renderTitle(item.title, nextHeadingLevel(state.headingLevel), "h5")}${item.badge ? `<p><span class="badge text-bg-secondary">${escape(item.badge)}</span></p>` : ""}${item.text ?? item.body ? `<p>${escape(item.text ?? item.body ?? "")}</p>` : ""}${item.href ? `<a href="${escape(item.href)}">Open</a>` : ""}</div></article></div>`,
+            `<div class="col-md-4"><article class="card h-100"><div class="card-body">${renderTitle(item.title, nextHeadingLevel(state.headingLevel), "h5")}${item.badge ? `<p><span class="badge text-bg-secondary">${escape(item.badge)}</span></p>` : ""}${item.text ?? item.body ? `<p>${escape(item.text ?? item.body ?? "")}</p>` : ""}${safeHref(item.href) ? `<a href="${escape(safeHref(item.href) ?? "")}">Open</a>` : ""}</div></article></div>`,
         )
         .join("")}</div></section>`;
     case "table":
@@ -90,7 +90,10 @@ export function renderBlock(block: Block, state: BlockRenderState): string {
     case "reference":
       return `<section>${renderTitle(block.title, state.headingLevel)}<ul>${asArray(block.items)
         .map((item) => objectRecord(item))
-        .map((item) => `<li><a href="${escape(stringify(item.path))}">${escape(stringify(item.label))}</a></li>`)
+        .map((item) => {
+          const href = safeHref(stringify(item.path));
+          return `<li>${href ? `<a href="${escape(href)}">${escape(stringify(item.label))}</a>` : escape(stringify(item.label))}</li>`;
+        })
         .join("")}</ul></section>`;
     case "fileTree":
       return `<section>${renderTitle(block.title, state.headingLevel)}<p><strong>${escape(String(block.root ?? ""))}</strong></p><ul>${asArray(block.items)
@@ -148,4 +151,13 @@ function asArray(value: unknown): unknown[] {
 
 function objectRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function safeHref(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const trimmed = value.trim();
+  if (/^(https?:|mailto:|tel:)/i.test(trimmed)) return trimmed;
+  if (/^(#|\/(?!\/)|\.{0,2}\/)/.test(trimmed)) return trimmed;
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return trimmed;
+  return undefined;
 }
