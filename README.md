@@ -629,9 +629,10 @@ Automatic watching and live re-rendering are still planned.
 Expected usage:
 
 ```bash
-agent-side validate docs/index.yml
-agent-side render docs/index.yml --out dist
-agent-side preview
+npx agent-side init
+npx agent-side validate docs/index.yml
+npx agent-side render docs/index.yml --out dist
+npx agent-side preview
 ```
 
 Renderer selection is configured in `docir.toml`:
@@ -644,13 +645,109 @@ name = "plain"      # plain | bootstrap | markdown
 Render output modes:
 
 ```bash
-agent-side render docs/index.yml --out dist --mode single
-agent-side render docs/index.yml --out dist --mode bundle
-agent-side render docs/index.yml --out dist --mode site
+npx agent-side render docs/index.yml --out dist --mode single
+npx agent-side render docs/index.yml --out dist --mode bundle
+npx agent-side render docs/index.yml --out dist --mode site
 ```
 
 `single` is the default. HTML renderers write `dist/index.html`; the Markdown renderer writes `dist/index.md`.
 `bundle` and `site` currently write `index.html` plus `assets/agent-side.css`.
+
+---
+
+## Installation
+
+Install from npm:
+
+```bash
+npm install -D agent-side
+```
+
+Or run it directly:
+
+```bash
+npx agent-side --help
+```
+
+The package exposes the `agent-side` CLI and reusable ESM library APIs.
+
+---
+
+## Library Usage
+
+Use the high-level project API when you want agent-side to load config, resolve includes, render, and write output:
+
+```ts
+import { renderProject } from "agent-side";
+
+await renderProject({
+  configPath: "docir.toml",
+});
+```
+
+Use lower-level APIs when you need direct control:
+
+```ts
+import {
+  loadConfig,
+  loadDoc,
+  normalizeDoc,
+  renderBootstrapHtml,
+  validateDoc,
+} from "agent-side";
+
+const config = await loadConfig("docir.toml");
+const doc = await loadDoc(config.site.entry, config);
+const validDoc = validateDoc(doc, config);
+const ast = normalizeDoc(validDoc);
+const html = renderBootstrapHtml(ast, config);
+```
+
+Additional entry points:
+
+```ts
+import { renderProject } from "agent-side/core";
+import { renderBootstrapHtml } from "agent-side/renderer/bootstrap";
+import { renderPlainDocument } from "agent-side/renderer/plain";
+import { renderMarkdownDocument } from "agent-side/renderer/markdown";
+```
+
+---
+
+## npm Package
+
+The npm package is named `agent-side`.
+
+Package build output is separate from rendered document output:
+
+```text
+lib/   TypeScript build output for npm publication
+dist/  Generated document output from `agent-side render`
+```
+
+`dist/` remains reserved for generated review HTML or Markdown. The npm `bin`, `exports`, and `types` fields point to compiled files under `lib/`.
+
+Published package contents are limited to:
+
+```text
+lib/
+templates/
+themes/
+README.md
+LICENSE
+package.json
+```
+
+Before publishing, verify the package locally:
+
+```bash
+pnpm typecheck
+pnpm test
+pnpm build
+npm pack --dry-run
+```
+
+Do not commit generated `lib/` or `dist/` output.
 
 ---
 
