@@ -50,7 +50,7 @@
   },
   "scripts": {
     "clean": "node -e \"require('node:fs').rmSync('lib', { recursive: true, force: true })\"",
-    "build": "npm run clean && tsc -p tsconfig.build.json",
+    "build": "node -e \"require('node:fs').rmSync('lib', { recursive: true, force: true })\" && tsc -p tsconfig.build.json",
     "dev": "tsx src/cli/main.ts",
     "validate": "tsx src/cli/main.ts validate docs/index.yml",
     "render": "tsx src/cli/main.ts render docs/index.yml --out dist",

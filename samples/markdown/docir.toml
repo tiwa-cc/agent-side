@@ -20,4 +20,4 @@ strict = true
 unknown_keys = "error"
 
 [theme]
-path = "../themes/default_.yml"
+path = "../themes/default.yml"

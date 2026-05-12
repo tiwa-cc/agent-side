@@ -1,6 +1,19 @@
 # dependencies
 node_modules/
 
+# Local AI assistant files
+.agents
+.codex
+.cursor/
+.cursorrules
+.copilot/
+.claude/
+.continue/
+.windsurf/
+.roo/
+.codeium/
+.gemini/
+
 # package manager
 .pnpm-store/
 .npm/
