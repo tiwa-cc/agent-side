@@ -11,13 +11,18 @@ export const configSchema = z.object({
     .object({
       name: z.literal("bootstrap").default("bootstrap"),
       theme: z.string().default("default"),
+      output: z
+        .object({
+          mode: z.enum(["single", "bundle", "site"]).default("single"),
+        })
+        .default({ mode: "single" }),
       mermaid: z
         .object({
           mode: z.enum(["cdn", "bundled", "pre_rendered"]).default("cdn"),
         })
         .default({ mode: "cdn" }),
     })
-    .default({ name: "bootstrap", theme: "default", mermaid: { mode: "cdn" } }),
+    .default({ name: "bootstrap", theme: "default", output: { mode: "single" }, mermaid: { mode: "cdn" } }),
   include: z
     .object({
       base_dir: z.string().default("docs"),

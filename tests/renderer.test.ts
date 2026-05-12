@@ -113,6 +113,26 @@ describe("fixture-based rendering", () => {
       process.chdir(previousCwd);
     }
   });
+
+  it("uses single output mode by default without emitting asset files", async () => {
+    const nestedConfig = resolve(fixturesRoot, "minimal/docir.toml");
+    const { html, mode, assetFiles } = await renderProject({ configPath: nestedConfig, outDir: "tmp/single-out" });
+
+    expect(mode).toBe("single");
+    expect(assetFiles).toEqual([]);
+    expect(html).toContain("<style>");
+    expect(html).not.toContain("assets/agent-side.css");
+  });
+
+  it("emits renderer CSS as an asset in bundle mode", async () => {
+    const nestedConfig = resolve(fixturesRoot, "minimal/docir.toml");
+    const { html, mode, assetFiles } = await renderProject({ configPath: nestedConfig, outDir: "tmp/bundle-out", mode: "bundle" });
+
+    expect(mode).toBe("bundle");
+    expect(assetFiles).toEqual([resolve(repoRoot, "tmp/bundle-out/assets/agent-side.css")]);
+    expect(html).toContain('href="assets/agent-side.css"');
+    expect(html).not.toContain("<style>");
+  });
 });
 
 describe("renderer safety", () => {

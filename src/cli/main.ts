@@ -26,6 +26,7 @@ program
   .argument("[entry]", "DocIR entry YAML")
   .option("-o, --out <dir>", "output directory")
   .option("-c, --config <path>", "config path", "docir.toml")
+  .option("-m, --mode <mode>", "output mode: single, bundle, or site")
   .action((entry, options) => run(() => renderCommand(entry, options)));
 
 program
@@ -33,6 +34,7 @@ program
   .argument("[entry]", "DocIR entry YAML")
   .option("-o, --out <dir>", "output directory")
   .option("-c, --config <path>", "config path", "docir.toml")
+  .option("-m, --mode <mode>", "output mode: single, bundle, or site")
   .option("-p, --port <port>", "preview port", "4173")
   .action((entry, options) => run(() => previewCommand(entry, options)));
 

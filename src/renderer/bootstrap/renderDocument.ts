@@ -5,9 +5,16 @@ import { renderBlock } from "./renderBlock.js";
 
 export function renderDocument(doc: DocIR, context: RenderContext): string {
   const lang = doc.lang ?? context.config.site.lang ?? "en";
+  const outputMode = context.outputMode ?? context.config.renderer.output.mode;
   const mermaidScript = renderMermaidScript(context.config.renderer.mermaid.mode);
   const shellClass = shellClassForTheme(context);
-  const styles = renderStyles(context);
+  const styles = renderBootstrapCss(context);
+  const rendererCss =
+    outputMode === "single"
+      ? `<style>
+${styles}
+  </style>`
+      : `<link href="${escape(context.cssHref ?? "assets/agent-side.css")}" rel="stylesheet">`;
 
   return `<!doctype html>
 <html lang="${escape(lang)}">
@@ -16,9 +23,7 @@ export function renderDocument(doc: DocIR, context: RenderContext): string {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escape(doc.title)}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-${styles}
-  </style>
+  ${rendererCss}
 </head>
 <body>
   <main class="${shellClass}">
@@ -63,7 +68,7 @@ for (const [index, block] of document.querySelectorAll(".mermaid-block").entries
 </script>`
 }
 
-function renderStyles(context: RenderContext): string {
+export function renderBootstrapCss(context: RenderContext): string {
   const tokens = context.theme?.tokens ?? {};
   const surface = cssColor(tokens.surface, "#ffffff");
   const text = cssColor(tokens.text, "#212529");

@@ -569,6 +569,137 @@ The preview system is responsible for:
 * re-rendering on change
 * making human review easy
 
+## Output Strategy
+
+The default render output should be a single HTML file.
+
+Default output:
+
+```text
+dist/
+  index.html
+```
+
+The default mode should minimize generated files because AI agents may work in multiple git worktrees, branches, or parallel task directories.
+Generated output should be easy to delete, regenerate, and ignore from version control.
+
+The standard use case is human review of agent-generated documents, not full static site asset management.
+
+### Output modes
+
+The renderer should support output modes:
+
+* `single`
+* `bundle`
+* `site`
+
+### single mode
+
+`single` is the default mode.
+
+It should generate only:
+
+```text
+dist/index.html
+```
+
+In this mode:
+
+* small renderer CSS should be embedded inline
+* Bootstrap may be loaded from CDN
+* Mermaid may be loaded from CDN
+* no asset files should be emitted unless explicitly requested
+* output should remain deterministic and easy to snapshot
+
+Example:
+
+```bash
+agent-side render docs/index.yml --out dist
+agent-side render docs/index.yml --out dist --mode single
+```
+
+Both commands should produce the same default single-file output.
+
+### bundle mode
+
+`bundle` mode may generate assets for offline distribution.
+
+Example:
+
+```text
+dist/
+  index.html
+  assets/
+    bootstrap.css
+    mermaid.js
+    agent-side.css
+```
+
+Use this mode when the generated document must be opened offline or distributed as a self-contained folder.
+
+Example:
+
+```bash
+agent-side render docs/index.yml --out dist --mode bundle
+```
+
+### site mode
+
+`site` mode may generate multiple pages and assets.
+
+Example:
+
+```text
+dist/
+  index.html
+  pages/
+    renderer.html
+    schema.html
+  assets/
+    agent-side.css
+```
+
+This mode is for static site use cases and should not be the default.
+
+Example:
+
+```bash
+agent-side render docs/index.yml --out dist --mode site
+```
+
+### Mermaid and assets
+
+Mermaid rendering should follow the selected output mode.
+
+Recommended defaults:
+
+* `single`: load Mermaid from CDN or inline only when explicitly configured
+* `bundle`: copy Mermaid runtime into `dist/assets/`
+* `site`: use shared assets for multiple pages
+* `pre_rendered`: render diagrams to static SVG/PNG when implemented
+
+The default should avoid emitting extra files.
+
+### CSS and framework assets
+
+Bootstrap and renderer CSS should follow the selected output mode.
+
+Recommended defaults:
+
+* `single`: Bootstrap from CDN, small agent-side CSS inline
+* `bundle`: copy CSS assets into `dist/assets/`
+* `site`: emit shared CSS assets for multiple pages
+
+DocIR must not change based on output mode.
+Only the renderer output strategy should change.
+
+### Version control
+
+Generated output directories such as `dist/` should normally be ignored by Git.
+
+Test snapshots are different.
+Snapshot outputs under `tests/**/__snapshots__/` should remain under version control because they represent expected renderer behavior.
+
 ## Distribution and Library Design
 
 agent-side should be designed as both a CLI tool and a reusable library.

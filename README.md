@@ -550,6 +550,17 @@ agent-side render docs/index.yml --out dist
 agent-side preview
 ```
 
+Render output modes:
+
+```bash
+agent-side render docs/index.yml --out dist --mode single
+agent-side render docs/index.yml --out dist --mode bundle
+agent-side render docs/index.yml --out dist --mode site
+```
+
+`single` is the default and writes only `dist/index.html`.
+`bundle` and `site` currently write `index.html` plus `assets/agent-side.css`.
+
 ---
 
 ## Suggested TypeScript Stack
