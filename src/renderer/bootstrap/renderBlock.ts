@@ -1,5 +1,6 @@
 import type { Block, TableBlock } from "../../ast/types.js";
 import { classNames, escapeHtml as escape } from "../../utils/html.js";
+import { asArray, labelize, objectRecord, safeHref, stringify } from "../shared.js";
 
 interface BlockRenderState {
   headingLevel: number;
@@ -133,31 +134,4 @@ function renderTitle(title: string | undefined, level: number, visualClass?: str
 
 function nextHeadingLevel(level: number): number {
   return Math.min(6, level + 1);
-}
-
-function labelize(value: string): string {
-  return value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
-function stringify(value: unknown): string {
-  if (Array.isArray(value)) return value.map(stringify).join(", ");
-  if (value && typeof value === "object") return Object.values(value).map(stringify).join(", ");
-  return String(value ?? "");
-}
-
-function asArray(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
-function objectRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
-}
-
-function safeHref(value: string | undefined): string | undefined {
-  if (!value) return undefined;
-  const trimmed = value.trim();
-  if (/^(https?:|mailto:|tel:)/i.test(trimmed)) return trimmed;
-  if (/^(#|\/(?!\/)|\.{0,2}\/)/.test(trimmed)) return trimmed;
-  if (!/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return trimmed;
-  return undefined;
 }

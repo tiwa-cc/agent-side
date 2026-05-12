@@ -9,7 +9,9 @@
   "exports": {
     ".": "./dist/index.js",
     "./core": "./dist/core/index.js",
-    "./renderer/bootstrap": "./dist/renderer/bootstrap/index.js"
+    "./renderer/bootstrap": "./dist/renderer/bootstrap/index.js",
+    "./renderer/plain": "./dist/renderer/plain/index.js",
+    "./renderer/markdown": "./dist/renderer/markdown/index.js"
   },
   "types": "./dist/index.d.ts",
   "files": [

@@ -10,3 +10,5 @@ export { themeSchema } from "./schema/themeSchema.js";
 export type { DocirTheme } from "./schema/themeSchema.js";
 export { renderBootstrapHtml, renderProject, validateDoc, validateProject } from "./core/index.js";
 export type { LoadedProject, LoadProjectOptions, RenderProjectOptions, RenderProjectResult } from "./core/index.js";
+export { renderMarkdownDocument } from "./renderer/markdown/index.js";
+export { renderPlainCss, renderPlainDocument } from "./renderer/plain/index.js";

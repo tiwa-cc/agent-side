@@ -682,16 +682,84 @@ The default should avoid emitting extra files.
 
 ### CSS and framework assets
 
-Bootstrap and renderer CSS should follow the selected output mode.
+Framework and renderer CSS should follow the selected output mode.
 
 Recommended defaults:
 
-* `single`: Bootstrap from CDN, small agent-side CSS inline
+* `single`: avoid extra emitted asset files; use inline CSS or CDN only when appropriate
 * `bundle`: copy CSS assets into `dist/assets/`
 * `site`: emit shared CSS assets for multiple pages
 
 DocIR must not change based on output mode.
 Only the renderer output strategy should change.
+
+### Renderer priority
+
+The renderer roadmap should prioritize review-friendly output and low file count.
+
+Recommended renderer priority:
+
+1. Plain HTML Renderer
+2. Bootstrap HTML Renderer
+3. Markdown Renderer
+
+Bootstrap HTML is already being implemented and may remain the first working enhanced renderer.
+However, Plain HTML should be treated as the baseline renderer because it best matches the default `single` output mode.
+
+Markdown should be included as the third target because it is useful for exporting agent-side documents back into existing documentation systems, GitHub README-like documents, and plain text review workflows.
+
+### Plain HTML Renderer
+
+A Plain HTML renderer should be implemented as a baseline renderer.
+
+It should:
+
+* generate readable HTML without external CSS frameworks
+* work well with `single` output mode
+* embed small default CSS inline
+* avoid emitting extra files by default
+* serve as a stable baseline for snapshot tests
+* support the same normalized AST as other renderers
+* avoid renderer-specific requirements in DocIR
+* keep output deterministic and easy to diff
+
+The Plain HTML renderer may be less visually rich than Bootstrap, but it should be reliable, dependency-light, and suitable for AI-assisted document review.
+
+### Bootstrap HTML Renderer
+
+The Bootstrap renderer should be treated as an enhanced renderer.
+
+It should:
+
+* produce a more polished preview than Plain HTML
+* map semantic DocIR blocks to Bootstrap components
+* keep Bootstrap classes inside the renderer only
+* support `single`, `bundle`, and `site` output strategies
+* avoid leaking Bootstrap-specific fields into DocIR
+
+Bootstrap may use CDN assets in `single` mode and bundled assets in `bundle` mode.
+
+### Markdown Renderer
+
+A Markdown renderer should be planned as the third renderer target.
+
+It should:
+
+* export DocIR back into readable Markdown
+* preserve semantic structure where possible
+* degrade gracefully when Markdown has no equivalent structure
+* avoid introducing renderer-specific requirements into DocIR
+* support documentation workflows that still depend on Markdown
+
+Markdown output may lose some visual fidelity, but it should preserve meaning as much as possible.
+
+Examples:
+
+* `notice` may become a blockquote with a label
+* `decision` may become a titled section
+* `table` should remain a normal Markdown table when possible
+* `mermaid` should become a fenced `mermaid` code block
+* `cards` may become subsections or list items
 
 ### Version control
 

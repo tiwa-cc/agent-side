@@ -1,0 +1,5 @@
+title: Minimal Plain
+blocks:
+  - type: notice
+    title: Plain Notice
+    body: This document is rendered without Bootstrap.

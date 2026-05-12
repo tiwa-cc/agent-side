@@ -9,7 +9,7 @@ export const configSchema = z.object({
   }),
   renderer: z
     .object({
-      name: z.literal("bootstrap").default("bootstrap"),
+      name: z.enum(["plain", "bootstrap", "markdown"]).default("plain"),
       theme: z.string().default("default"),
       output: z
         .object({
@@ -22,7 +22,7 @@ export const configSchema = z.object({
         })
         .default({ mode: "cdn" }),
     })
-    .default({ name: "bootstrap", theme: "default", output: { mode: "single" }, mermaid: { mode: "cdn" } }),
+    .default({ name: "plain", theme: "default", output: { mode: "single" }, mermaid: { mode: "cdn" } }),
   include: z
     .object({
       base_dir: z.string().default("docs"),

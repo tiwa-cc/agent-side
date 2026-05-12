@@ -133,6 +133,27 @@ describe("fixture-based rendering", () => {
     expect(html).toContain('href="assets/agent-side.css"');
     expect(html).not.toContain("<style>");
   });
+
+  it("selects the plain HTML renderer from renderer.name", async () => {
+    const { html, outFile, assetFiles } = await renderProject({ configPath: resolve(fixturesRoot, "minimal-plain/docir.toml"), outDir: "tmp/plain-out" });
+
+    expect(outFile).toBe(resolve(repoRoot, "tmp/plain-out/index.html"));
+    expect(assetFiles).toEqual([]);
+    expect(html).toContain("<h1>Minimal Plain</h1>");
+    expect(html).not.toContain("bootstrap.min.css");
+    expect(html).toContain("<style>");
+  });
+
+  it("selects the Markdown renderer from renderer.name", async () => {
+    const { html, outFile, assetFiles } = await renderProject({ configPath: resolve(fixturesRoot, "minimal-markdown/docir.toml"), outDir: "tmp/markdown-out" });
+
+    expect(outFile).toBe(resolve(repoRoot, "tmp/markdown-out/index.md"));
+    expect(assetFiles).toEqual([]);
+    expect(html).toContain("# Minimal Markdown");
+    expect(html).toContain("## Section");
+    expect(html).toContain("| Name |");
+    expect(html).not.toContain("<html");
+  });
 });
 
 describe("renderer safety", () => {

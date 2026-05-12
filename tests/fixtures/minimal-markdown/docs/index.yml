@@ -1,0 +1,16 @@
+title: Minimal Markdown
+description: Markdown export sample.
+blocks:
+  - type: section
+    title: Section
+    blocks:
+      - type: notice
+        title: Notice
+        body: This document is rendered as Markdown.
+      - type: table
+        title: Table
+        columns:
+          - key: name
+            label: Name
+        rows:
+          - name: Example
