@@ -38,6 +38,24 @@ program
   .option("-p, --port <port>", "preview port", "4173")
   .action((entry, options) => run(() => previewCommand(entry, options)));
 
+program.addHelpText(
+  "after",
+  `
+
+Examples:
+  $ agent-side init
+  $ agent-side validate docs/index.yml
+  $ agent-side render docs/index.yml --out dist
+  $ agent-side preview
+
+DocIR:
+  agent-side uses YAML DocIR as its document DSL.
+  Run "agent-side init" to create a minimal sample.
+  See repository samples for more examples:
+  https://github.com/tiwa-cc/agent-side
+`,
+);
+
 await program.parseAsync(process.argv);
 
 async function run(fn: () => Promise<void>): Promise<void> {
