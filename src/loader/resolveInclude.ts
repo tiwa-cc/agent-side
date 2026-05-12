@@ -18,7 +18,7 @@ export async function resolveInclude(
 
   if (!options.allowParent) {
     const base = await realpath(resolve(options.rootDir, options.baseDir));
-    const target = normalize(resolve(normalized));
+    const target = await realpathIfExists(normalized);
     const fromBase = relative(base, target);
     if (fromBase === ".." || fromBase.startsWith("../") || fromBase.startsWith("..\\")) {
       throw new DocirError(`Include escapes base_dir: ${src}`);
@@ -26,4 +26,15 @@ export async function resolveInclude(
   }
 
   return normalized;
+}
+
+async function realpathIfExists(path: string): Promise<string> {
+  try {
+    return await realpath(path);
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") {
+      return normalize(resolve(path));
+    }
+    throw error;
+  }
 }

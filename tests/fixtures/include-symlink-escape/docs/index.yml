@@ -1,0 +1,4 @@
+title: Include Symlink Escape
+blocks:
+  - type: include
+    src: ./link.yml

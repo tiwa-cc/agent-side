@@ -323,6 +323,7 @@ describe("fixture-based validation failures", () => {
     ["missing-include", /Failed to read or parse included YAML.*missing\.yml/s],
     ["include-cycle", /Circular include detected.*a\.yml.*b\.yml.*a\.yml/s],
     ["parent-traversal", /Include escapes base_dir.*outside\.yml/s],
+    ["include-symlink-escape", /Include escapes base_dir.*link\.yml/s],
     ["unknown-block", /Invalid DocIR document.*type/s],
     ["unknown-key", /Invalid DocIR document.*unexpected/s],
   ])("%s reports a readable error", async (fixture, expected) => {
