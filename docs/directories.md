@@ -1,60 +1,122 @@
 ## directories
 
 - agent-side/
+  - .gitignore
+  - LICENSE
+  - README.md
+
+  - pnpm-lock.yaml
+  - tsconfig.json
+  - tsconfig.build.json
+
   - docir.toml
   - package.json
-  - tsconfig.json
   - vite.config.ts
 
+  - node_modules/
+
+  - dist/
+
   - docs/
+    - goal.md
     - index.yml
+    - directories.md
+    - settings.md
     - sections/
       - concept.yml
       - renderer.yml
+    - assets/
+      - screenshots/
+        - index.png
+
+  - src/
+    - index.ts
+    - cli/
+      - main.ts
+      - outputMode.ts
+      - commands/
+        - init.ts
+        - validate.ts
+        - preview.ts
+        - render.ts
+    - core/
+      - index.ts
+      - loadProject.ts
+      - renderProject.ts
+      - validateDoc.ts
+      - validateProject.ts
+    - preview/
+      - main.ts
+      - index.html
+      - style.css
+    - loader/
+      - loadDoc.ts
+      - resolveInclude.ts
+      - validateDoc.ts
+    - renderer/
+      - shared.ts
+      - types.ts
+      - bootstrap/
+        - index.ts
+        - renderBlock.ts
+        - renderDocument.ts
+        - templates
+      - markdown/
+        - index.ts
+        - renderDocument.ts
+      - plain/
+        - index.ts
+        - renderDocument.ts
+    - ast/
+      - normalize.ts
+      - types.ts
+    - config/
+      - configSchema.ts
+      - loadConfig.ts
+      - loadTheme.ts
+    - schema/
+      - blockSchemas.ts
+      - docSchema.ts
+      - themeSchema.ts
+    - utils/
+      - html.ts
+      - path.ts
+      - errors.ts
+
+  - templates/
+    - default/
+      - docir.toml
+      - docs/
+        - index.yml
+      - themes/
+        - default.yml
 
   - themes/
     - default.yml
     - technical.yml
 
-  - src/
-    - cli/
-      - main.ts
-      - commands/
-        - validate.ts
-        - render.ts
-        - preview.ts
-
-    - config/
-      - loadConfig.ts
-      - configSchema.ts
-
-    - loader/
-      - loadDoc.ts
-      - resolveInclude.ts
-
-    - schema/
-      - docSchema.ts
-      - blockSchemas.ts
-      - themeSchema.ts
-
-    - ast/
-      - normalize.ts
-      - types.ts
-
-    - renderer/
-      - types.ts
-      - bootstrap/
-        - renderDocument.ts
-        - renderBlock.ts
-        - templates/
-
-    - preview/
-      - index.html
-      - main.ts
-
-    - utils/
-      - errors.ts
-      - path.ts
+  - samples/
+    - README.md
+    - sample.yml
+    - bootstrap/
+      - .gitignore
+      - docir.toml
+      - bootstrap.png
+      - dist/
+        - index.html
+    - markdown/
+      - .gitignore
+      - docir.toml
+      - dist/
+        - index.md
+    - plain/
+      - .gitignore
+      - docir.toml
+      - plain.png
+      - dist/
+        - index.html
+    - themes/
+      - default.yml
 
   - tests/
     - fixtures/
