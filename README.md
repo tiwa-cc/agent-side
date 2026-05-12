@@ -16,20 +16,17 @@ AI agents should not directly edit fragile HTML, CSS, or loosely structured Mark
 
 Instead, they should edit a structured document IR written in YAML.
 
-```text
-Agent / Human
-  ↓
-YAML DocIR
-  ↓
-Loader
-  ↓
-Validator
-  ↓
-Normalized AST
-  ↓
-Renderer
-  ↓
-Readable HTML
+```mermaid
+flowchart TD
+    A[Agent / Human]
+    B[YAML DocIR]
+    C[Loader]
+    D[Validator]
+    E[Normalized AST]
+    F[Renderer]
+    G[Readable HTML]
+
+    A --> B --> C --> D --> E --> F --> G
 ```
 
 The generated HTML is an output artifact.
