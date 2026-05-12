@@ -4,7 +4,9 @@ import type { DocirConfig } from "../src/config/configSchema.js";
 import { loadProject } from "../src/core/loadProject.js";
 import { renderProject } from "../src/core/renderProject.js";
 import { validateDoc } from "../src/core/validateDoc.js";
+import { parseOutputMode } from "../src/cli/outputMode.js";
 import { renderDocument } from "../src/renderer/bootstrap/renderDocument.js";
+import { renderMarkdownDocument } from "../src/renderer/markdown/renderDocument.js";
 
 const repoRoot = process.cwd();
 const fixturesRoot = resolve(repoRoot, "tests/fixtures");
@@ -186,6 +188,62 @@ describe("renderer safety", () => {
     expect(html).not.toContain("javascript:");
     expect(html).not.toContain('<a href="');
     expect(html).toContain("Unsafe reference");
+  });
+
+  it("escapes Markdown control syntax in plain text", () => {
+    const markdown = renderMarkdownDocument({
+      title: "Title [x](y)",
+      description: "# not a heading",
+      blocks: [
+        {
+          type: "paragraph",
+          text: "- not a list\n[label](javascript:bad)\n<html>",
+        },
+        {
+          type: "table",
+          columns: [{ key: "text", label: "Pipe | Label" }],
+          rows: [{ text: "cell | value\nnext line" }],
+        },
+        {
+          type: "code",
+          language: "md",
+          code: "```inside```",
+        },
+      ],
+    });
+
+    expect(markdown).toContain("# Title \\[x\\]\\(y\\)");
+    expect(markdown).toContain("\\# not a heading");
+    expect(markdown).toContain("\\- not a list");
+    expect(markdown).toContain("\\[label\\]\\(javascript:bad\\)");
+    expect(markdown).toContain("\\<html\\>");
+    expect(markdown).toContain("| Pipe \\| Label |");
+    expect(markdown).toContain("| cell \\| value next line |");
+    expect(markdown).toContain("````md\n```inside```\n````");
+  });
+
+  it("escapes Markdown link destinations", () => {
+    const markdown = renderMarkdownDocument({
+      title: "Links",
+      blocks: [
+        {
+          type: "cards",
+          items: [{ title: "Card", href: "docs/a b) [extra](https://example.com" }],
+        },
+        {
+          type: "reference",
+          items: [{ label: "Reference", path: "docs/a b) [extra](https://example.com" }],
+        },
+      ],
+    });
+
+    expect(markdown).toContain("[Open](docs/a%20b%29%20[extra]%28https://example.com)");
+    expect(markdown).toContain("[Reference](docs/a%20b%29%20[extra]%28https://example.com)");
+    expect(markdown).not.toContain("] [extra](");
+  });
+
+  it("rejects invalid CLI output modes", () => {
+    expect(() => parseOutputMode("bundel")).toThrow(/Invalid output mode/);
   });
 });
 

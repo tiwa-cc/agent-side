@@ -3,7 +3,7 @@ import { z } from "zod";
 export const themeSchema = z
   .object({
     name: z.string(),
-    renderer: z.literal("bootstrap").optional(),
+    renderer: z.enum(["plain", "bootstrap", "markdown"]).optional(),
     tokens: z
       .object({
         accent: z.string().optional(),
