@@ -812,7 +812,10 @@ pnpm agent-side render
 
 The package should expose reusable APIs.
 
-Example:
+Documentation examples must match the actual exported TypeScript APIs.
+Do not write aspirational API examples in npm-facing documentation unless they are clearly marked as planned.
+
+Current low-level usage example:
 
 ```ts
 import {
@@ -824,11 +827,13 @@ import {
 } from "agent-side";
 
 const config = await loadConfig("docir.toml");
-const doc = await loadDoc({ entry: config.site.entry, config });
+const doc = await loadDoc(config.site.entry, config);
 const validDoc = validateDoc(doc, config);
-const ast = normalizeDoc(validDoc, config);
+const ast = normalizeDoc(validDoc);
 const html = await renderBootstrapHtml(ast, config);
 ```
+
+If the implementation changes, this example must be updated in the same pull request.
 
 A higher-level API should also be provided:
 
