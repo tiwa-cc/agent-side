@@ -120,6 +120,8 @@ Example:
 page:
   title: agent-side sample
   lang: en
+  lead: A complex DocIR sample for validating renderer behavior, nested structures, semantic blocks, and AI-safe document editing.
+
   blocks:
     - type: notice
       tone: info
@@ -135,12 +137,35 @@ page:
         - type: mermaid
           title: Generation Flow
           diagram: |
-            flowchart TD
+            flowchart LR
               A[Agent or Human] --> B[DocIR YAML]
               B --> C[Loader]
               C --> D[Validator]
               D --> E[Renderer]
               E --> F[Readable HTML]
+
+        - type: cards
+          title: Main Components
+          layout: 3col
+          items:
+            - title: Loader
+              body: Reads YAML files, resolves include blocks, and prevents invalid paths or circular references.
+              badge: input
+            - title: Validator
+              body: Checks block types, required fields, forbidden presentation keys, and table row shape.
+              badge: safety
+            - title: Normalizer
+              body: Converts validated DocIR into a stable internal AST with defaults applied.
+              badge: structure
+            - title: Renderer
+              body: Converts the normalized AST into readable HTML using theme tokens and renderer rules.
+              badge: output
+            - title: Theme
+              body: Stores visual decisions outside DocIR so agents cannot freely modify presentation details.
+              badge: external
+            - title: Preview
+              body: Serves generated output locally and helps humans review changes in a browser.
+              badge: review
 
         - type: decision
           title: Primary Editing Target
