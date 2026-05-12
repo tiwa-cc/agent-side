@@ -31,26 +31,11 @@
     "agent-side": "./lib/cli/main.js"
   },
   "exports": {
-    ".": {
-      "types": "./lib/index.d.ts",
-      "import": "./lib/index.js"
-    },
-    "./core": {
-      "types": "./lib/core/index.d.ts",
-      "import": "./lib/core/index.js"
-    },
-    "./renderer/bootstrap": {
-      "types": "./lib/renderer/bootstrap/index.d.ts",
-      "import": "./lib/renderer/bootstrap/index.js"
-    },
-    "./renderer/plain": {
-      "types": "./lib/renderer/plain/index.d.ts",
-      "import": "./lib/renderer/plain/index.js"
-    },
-    "./renderer/markdown": {
-      "types": "./lib/renderer/markdown/index.d.ts",
-      "import": "./lib/renderer/markdown/index.js"
-    },
+    ".": "./lib/index.js",
+    "./core": "./lib/core/index.js",
+    "./renderer/bootstrap": "./lib/renderer/bootstrap/index.js",
+    "./renderer/plain": "./lib/renderer/plain/index.js",
+    "./renderer/markdown": "./lib/renderer/markdown/index.js",
     "./package.json": "./package.json"
   },
   "files": [
