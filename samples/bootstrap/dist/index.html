@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>agent-side implementation review</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --docir-accent: #0d6efd;
+      --docir-surface: #ffffff;
+      --docir-text: #212529;
+    }
+
+    body {
+      background: #f8f9fa;
+      color: var(--docir-text);
+    }
+
+    .doc-shell {
+      margin: 0 auto;
+      padding: 48px 20px 72px;
+      background: var(--docir-surface);
+      min-height: 100vh;
+    }
+
+    .doc-shell-sm {
+      max-width: 720px;
+    }
+
+    .doc-shell-md {
+      max-width: 840px;
+    }
+
+    .doc-shell-lg {
+      max-width: 960px;
+    }
+
+    .doc-shell-xl {
+      max-width: 1140px;
+    }
+
+    .doc-shell-fluid {
+      max-width: none;
+    }
+
+    .doc-section {
+      margin-top: 2rem;
+    }
+
+    .doc-wide {
+      max-width: 1120px;
+    }
+
+    .doc-full {
+      max-width: none;
+    }
+
+    h1,
+    h2,
+    h3 {
+      letter-spacing: 0;
+    }
+
+    a {
+      color: var(--docir-accent);
+    }
+
+    pre {
+      padding: 1rem;
+      background: #212529;
+      color: #f8f9fa;
+      border-radius: .375rem;
+      overflow-x: auto;
+    }
+
+    .mermaid-source {
+      background: #fff;
+      color: #212529;
+      border: 1px solid #dee2e6;
+    }
+
+    .mermaid-output svg {
+      max-width: 100%;
+      height: auto;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="doc-shell doc-shell-lg">
+    <header class="mb-5">
+      <h1>agent-side implementation review</h1>
+      <p class="lead">A complex DocIR sample for validating renderer behavior, nested structures, semantic blocks, and
+        AI-safe document editing.</p>
+    </header>
+    <div class="alert alert-info" role="note">
+      <h2 class="h5">Review Context</h2>
+      <p>This document is intentionally complex. It is used to test whether the renderer can produce stable, readable
+        HTML from structured YAML without relying on raw HTML or presentation-specific fields.</p>
+    </div>
+    <section class="doc-section">
+      <h2>Project Overview</h2>
+      <section>
+        <h3>Summary</h3>
+        <p>agent-side is an AI-safe document rendering layer. Agents edit structured YAML DocIR, while renderers
+          generate human-readable HTML for review.</p>
+      </section>
+      <section>
+        <h3>Project Facts</h3>
+        <dl>
+          <dt>Project name</dt>
+          <dd>agent-side</dd>
+          <dt>Primary editing format</dt>
+          <dd>YAML DocIR</dd>
+          <dt>Configuration format</dt>
+          <dd>TOML</dd>
+          <dt>First renderer</dt>
+          <dd>Bootstrap HTML</dd>
+          <dt>Human review target</dt>
+          <dd>Browser-rendered HTML</dd>
+          <dt>Main design goal</dt>
+          <dd>Prevent AI agents from breaking document structure and presentation</dd>
+        </dl>
+      </section>
+      <h3>Core Principles</h3>
+      <ul>
+        <li>Agents write meaning, not presentation.</li>
+        <li>Generated HTML is an artifact, not the source of truth.</li>
+        <li>Renderer-specific classes and styles must stay outside DocIR.</li>
+        <li>Complex documents should be split into YAML files and resolved by the loader.</li>
+        <li>The renderer should receive a normalized AST, not raw file fragments.</li>
+      </ul>
+    </section>
+    <section class="doc-section">
+      <h2>Architecture</h2>
+      <h3>Document Generation Pipeline</h3>
+      <div class="mermaid-block">
+        <pre class="mermaid-source">flowchart TD
+  A[Agent or Human] --&gt; B[DocIR YAML]
+  B --&gt; C[Loader]
+  C --&gt; D[Include Resolver]
+  D --&gt; E[Validator]
+  E --&gt; F[Normalizer]
+  F --&gt; G[Renderer]
+  G --&gt; H[Readable HTML]
+  H --&gt; I[Browser Review]
+</pre>
+        <div class="mermaid-output" aria-hidden="true"></div>
+      </div>
+      <section>
+        <h3>Main Components</h3>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <article class="card h-100">
+              <div class="card-body">
+                <h4 class="h5">Loader</h4>
+                <p><span class="badge text-bg-secondary">input</span></p>
+                <p>Reads YAML files, resolves include blocks, and prevents invalid paths or circular references.</p>
+              </div>
+            </article>
+          </div>
+          <div class="col-md-4">
+            <article class="card h-100">
+              <div class="card-body">
+                <h4 class="h5">Validator</h4>
+                <p><span class="badge text-bg-secondary">safety</span></p>
+                <p>Checks block types, required fields, forbidden presentation keys, and table row shape.</p>
+              </div>
+            </article>
+          </div>
+          <div class="col-md-4">
+            <article class="card h-100">
+              <div class="card-body">
+                <h4 class="h5">Normalizer</h4>
+                <p><span class="badge text-bg-secondary">structure</span></p>
+                <p>Converts validated DocIR into a stable internal AST with defaults applied.</p>
+              </div>
+            </article>
+          </div>
+          <div class="col-md-4">
+            <article class="card h-100">
+              <div class="card-body">
+                <h4 class="h5">Renderer</h4>
+                <p><span class="badge text-bg-secondary">output</span></p>
+                <p>Converts the normalized AST into readable HTML using theme tokens and renderer rules.</p>
+              </div>
+            </article>
+          </div>
+          <div class="col-md-4">
+            <article class="card h-100">
+              <div class="card-body">
+                <h4 class="h5">Theme</h4>
+                <p><span class="badge text-bg-secondary">external</span></p>
+                <p>Stores visual decisions outside DocIR so agents cannot freely modify presentation details.</p>
+              </div>
+            </article>
+          </div>
+          <div class="col-md-4">
+            <article class="card h-100">
+              <div class="card-body">
+                <h4 class="h5">Preview</h4>
+                <p><span class="badge text-bg-secondary">review</span></p>
+                <p>Serves generated output locally and helps humans review changes in a browser.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+      <article class="border-start border-success border-4 ps-3 my-4">
+        <h3 class="h5">Source of Truth</h3>
+        <p><strong>Decision:</strong> YAML DocIR is the source of truth.</p>
+        <p><strong>Rationale:</strong> HTML should be regenerated from structured meaning so that agents do not directly
+          mutate fragile presentation output.</p>
+      </article>
+    </section>
+    <section class="doc-section">
+      <h2>Renderer Comparison</h2>
+      <section>
+        <h3>Renderer Options</h3>
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th scope="col">Renderer</th>
+                <th scope="col">Strength</th>
+                <th scope="col">Concern</th>
+                <th scope="col">Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Bootstrap HTML</td>
+                <td>Many ready-made components are available, making early output readable with little custom CSS.</td>
+                <td>The default appearance may feel Bootstrap-like unless themes are improved.</td>
+                <td>high</td>
+              </tr>
+              <tr>
+                <td>Tailwind HTML</td>
+                <td>Flexible visual design and suitable for custom themes.</td>
+                <td>Requires more renderer-side design rules because Tailwind is utility-first.</td>
+                <td>medium</td>
+              </tr>
+              <tr>
+                <td>Plain HTML</td>
+                <td>Minimal dependency and simple output.</td>
+                <td>Readability depends heavily on custom CSS.</td>
+                <td>medium</td>
+              </tr>
+              <tr>
+                <td>Markdown</td>
+                <td>Useful for exporting back to documentation systems.</td>
+                <td>Some semantic blocks may lose structure when converted to Markdown.</td>
+                <td>low</td>
+              </tr>
+              <tr>
+                <td>PDF</td>
+                <td>Useful for reports, proposals, and archival documents.</td>
+                <td>Mermaid and layout handling may require pre-rendering or a browser-based export path.</td>
+                <td>low</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <section>
+        <h3>Bootstrap vs Tailwind for the First Renderer</h3>
+        <div class="row g-3">
+          <div class="col-md">
+            <div class="card h-100">
+              <div class="card-body">
+                <p><strong>Name:</strong> Bootstrap</p>
+                <p><strong>Status:</strong> recommended</p>
+                <p><strong>Summary:</strong> Best first target because common document components can be mapped quickly.
+                </p>
+                <p><strong>Pros:</strong> Alerts, cards, tables, accordions, and grids are already available., The
+                  generated HTML becomes readable early., Snapshot tests can focus on semantic mapping instead of design
+                  details.</p>
+                <p><strong>Cons:</strong> The appearance may look generic., Advanced customization should be moved into
+                  themes.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md">
+            <div class="card h-100">
+              <div class="card-body">
+                <p><strong>Name:</strong> Tailwind</p>
+                <p><strong>Status:</strong> later</p>
+                <p><strong>Summary:</strong> Useful after renderer contracts and theme tokens are more stable.</p>
+                <p><strong>Pros:</strong> Good for custom design systems., Works well with token-based rendering.</p>
+                <p><strong>Cons:</strong> Requires more mapping rules., It is easier for presentation concerns to leak
+                  into DocIR if boundaries are weak.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+    <section class="doc-section">
+      <h2>Validation Rules</h2>
+      <div class="alert alert-warning" role="note">
+        <h3 class="h5">Presentation Keys Are Forbidden</h3>
+        <p>DocIR must reject fields such as class, style, margin, padding, font-size, and color. These belong to the
+          renderer or theme layer.</p>
+      </div>
+      <section>
+        <h3>Forbidden Keys</h3>
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th scope="col">Key</th>
+                <th scope="col">Reason</th>
+                <th scope="col">Preferred Alternative</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>class</td>
+                <td>Leaks renderer-specific implementation details into DocIR.</td>
+                <td>Use semantic block type, tone, layout, or theme tokens.</td>
+              </tr>
+              <tr>
+                <td>style</td>
+                <td>Allows arbitrary presentation changes and makes output unstable.</td>
+                <td>Use external theme configuration.</td>
+              </tr>
+              <tr>
+                <td>margin</td>
+                <td>Introduces pixel-level layout control into a semantic document.</td>
+                <td>Use renderer spacing tokens.</td>
+              </tr>
+              <tr>
+                <td>padding</td>
+                <td>Couples document meaning to visual layout.</td>
+                <td>Use theme-defined block spacing.</td>
+              </tr>
+              <tr>
+                <td>color</td>
+                <td>Allows agents to bypass tone and theme rules.</td>
+                <td>Use tone such as info, warning, danger, success, or neutral.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <article class="border-start border-warning border-4 ps-3 my-4">
+        <h3 class="h5">Validator Drift</h3>
+        <p><strong>Risk:</strong> The schema may become too permissive as more blocks are added.</p>
+        <p><strong>Mitigation:</strong> Keep strict mode enabled by default and add snapshot tests for every new block
+          type.</p>
+      </article>
+      <h3>No Two-Dimensional Table Rows</h3>
+      <ul>
+        <li>Table rows must be key-value objects.</li>
+        <li>Position-dependent array rows are not allowed.</li>
+        <li>Columns define display order, but row values must be addressed by keys.</li>
+      </ul>
+    </section>
+    <section class="doc-section">
+      <h2>Include and File Splitting</h2>
+      <section>
+        <p>Large documents should be split into smaller YAML files. Include resolution should happen before validation
+          or before final AST normalization, depending on implementation details.</p>
+      </section>
+      <section>
+        <h3>Recommended Project Structure</h3>
+        <p><strong>agent-side</strong></p>
+        <ul>
+          <li><code>docir.toml</code> Project configuration, renderer selection, include policy, validation mode, and
+            theme path.</li>
+          <li><code>docs/index.yml</code> Entry DocIR document.</li>
+          <li><code>docs/sections/concept.yml</code> Included section file.</li>
+          <li><code>docs/sections/renderer.yml</code> Included renderer design section.</li>
+          <li><code>themes/default.yml</code> Default external theme tokens.</li>
+          <li><code>dist/index.html</code> Generated review HTML.</li>
+          <li><code>src/</code> TypeScript source code.</li>
+          <li><code>tests/</code> Fixtures and snapshot tests.</li>
+        </ul>
+      </section>
+      <h3>Include Resolver Requirements</h3>
+      <ul>
+        <li>Resolve paths relative to the including file.</li>
+        <li>Reject parent traversal when allow_parent is false.</li>
+        <li>Detect circular includes.</li>
+        <li>Report missing files with readable error messages.</li>
+        <li>Preserve enough source location information for debugging.</li>
+        <li>Return a tree that the renderer can consume without knowing file boundaries.</li>
+      </ul>
+      <article class="border-start border-info border-4 ps-3 my-4">
+        <h3 class="h5">Include Validation Timing</h3>
+        <p><strong>Question:</strong> Should included files be validated individually before merge, or should the merged
+          document be validated as a whole?</p>
+        <p><strong>Context:</strong> Individual validation gives better local errors. Whole-document validation makes
+          cross-block rules easier.</p>
+      </article>
+    </section>
+    <section class="doc-section">
+      <h2>Mermaid Handling</h2>
+      <h3>Include Resolution with Cycle Detection</h3>
+      <div class="mermaid-block">
+        <pre class="mermaid-source">flowchart LR
+  A[index.yml] --&gt; B[concept.yml]
+  A --&gt; C[renderer.yml]
+  B --&gt; D[principles.yml]
+  C --&gt; D
+  D -. invalid .-&gt; A
+</pre>
+        <div class="mermaid-output" aria-hidden="true"></div>
+      </div>
+      <div class="alert alert-warning" role="note">
+        <h3 class="h5">Mermaid Failure Must Not Break the Page</h3>
+        <p>Mermaid rendering is useful but optional. If Mermaid fails, the document should still remain readable and the
+          original diagram source should be visible.</p>
+      </div>
+      <article class="border-start border-success border-4 ps-3 my-4">
+        <h3 class="h5">Mermaid Ownership</h3>
+        <p><strong>Decision:</strong> Mermaid source belongs to DocIR, but Mermaid rendering belongs to the renderer.
+        </p>
+        <p><strong>Rationale:</strong> Different output targets may use CDN rendering, bundled rendering, pre-rendered
+          SVG, or plain source fallback.</p>
+      </article>
+      <section>
+        <h3>Mermaid Rendering Modes</h3>
+        <div class="row g-3">
+          <div class="col-md">
+            <div class="card h-100">
+              <div class="card-body">
+                <p><strong>Name:</strong> cdn</p>
+                <p><strong>Status:</strong> default-for-preview</p>
+                <p><strong>Summary:</strong> Load Mermaid from a CDN in generated HTML.</p>
+                <p><strong>Pros:</strong> Simple implementation, Small generated output</p>
+                <p><strong>Cons:</strong> Requires network access, Not ideal for offline distribution</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md">
+            <div class="card h-100">
+              <div class="card-body">
+                <p><strong>Name:</strong> bundled</p>
+                <p><strong>Status:</strong> distribution</p>
+                <p><strong>Summary:</strong> Copy Mermaid assets into the output directory.</p>
+                <p><strong>Pros:</strong> Works offline, Reproducible distribution</p>
+                <p><strong>Cons:</strong> Larger output, Asset management is required</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md">
+            <div class="card h-100">
+              <div class="card-body">
+                <p><strong>Name:</strong> pre_rendered</p>
+                <p><strong>Status:</strong> future</p>
+                <p><strong>Summary:</strong> Convert diagrams to SVG or PNG during rendering.</p>
+                <p><strong>Pros:</strong> Suitable for PDF and static archives, Runtime JavaScript is unnecessary</p>
+                <p><strong>Cons:</strong> Build pipeline becomes heavier, Error handling must happen at render time</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+    <section class="doc-section">
+      <h2>CLI Behavior</h2>
+      <h3>Validate Document</h3>
+      <pre><code class="language-bash">agent-side validate docs/index.yml
+</code></pre>
+      <h3>Expected Validation Output</h3>
+      <pre><code>Loaded config: docir.toml
+Entry: docs/index.yml
+Includes resolved: 3
+Blocks validated: 42
+Result: valid
+</code></pre>
+      <h3>Render Document</h3>
+      <pre><code class="language-bash">agent-side render docs/index.yml --out dist
+</code></pre>
+      <h3>Expected Render Output</h3>
+      <pre><code>Loaded theme: themes/default.yml
+Renderer: bootstrap
+Mermaid mode: cdn
+Wrote: dist/index.html
+</code></pre>
+      <section>
+        <h3>CLI Implementation Tasks</h3>
+        <ul>
+          <li><strong>Implement agent-side init</strong> <span class="badge text-bg-secondary">todo</span></li>
+          <li><strong>Implement agent-side validate</strong> <span class="badge text-bg-secondary">in_progress</span>
+          </li>
+          <li><strong>Implement agent-side render</strong> <span class="badge text-bg-secondary">in_progress</span></li>
+          <li><strong>Implement agent-side preview</strong> <span class="badge text-bg-secondary">todo</span></li>
+        </ul>
+      </section>
+    </section>
+    <section class="doc-section">
+      <h2>Review Notes</h2>
+      <h3>Assumptions</h3>
+      <ul>
+        <li>The first implementation is written in TypeScript.</li>
+        <li>The first renderer outputs Bootstrap HTML.</li>
+        <li>The primary human review interface is a browser.</li>
+        <li>YAML remains the editable DocIR format.</li>
+        <li>TOML remains the project configuration format.</li>
+      </ul>
+      <article class="border-start border-warning border-4 ps-3 my-4">
+        <h3 class="h5">Overfitting to Bootstrap</h3>
+        <p><strong>Risk:</strong> If Bootstrap concepts leak into DocIR, future renderers will become harder to
+          implement.</p>
+        <p><strong>Mitigation:</strong> Keep Bootstrap class names inside the Bootstrap renderer and only expose
+          semantic fields in DocIR.</p>
+      </article>
+      <article class="border-start border-danger border-4 ps-3 my-4">
+        <h3 class="h5">Heading Depth Needs Care</h3>
+        <p>Nested sections and block titles must not all render as h2. The renderer should track depth and generate h2,
+          h3, h4, or lower headings as appropriate.</p>
+      </article>
+      <article class="border-start border-info border-4 ps-3 my-4">
+        <h3 class="h5">Theme Token Scope</h3>
+        <p><strong>Question:</strong> How much layout control should themes have before they become another CSS
+          abstraction layer?</p>
+        <p><strong>Context:</strong> The theme system should support readable output without allowing arbitrary
+          presentation mutation by agents.</p>
+      </article>
+      <article class="border-start border-success border-4 ps-3 my-4">
+        <h3 class="h5">Snapshot Tests</h3>
+        <p><strong>Decision:</strong> Renderer snapshot tests should be added for notice, section, mermaid, decision,
+          table, cards, risk, include-resolved documents, and nested heading structures.</p>
+        <p><strong>Rationale:</strong> Stable snapshots help detect accidental output regressions when block renderers
+          are changed.</p>
+      </article>
+    </section>
+    <section class="doc-section">
+      <h2>Final Human Review Checklist</h2>
+      <section>
+        <h3>Renderer Review Checklist</h3>
+        <ul class="list-unstyled">
+          <li><input class="form-check-input me-2" type="checkbox" disabled>HTML language is configurable and not
+            hard-coded.</li>
+          <li><input class="form-check-input me-2" type="checkbox" disabled>Heading hierarchy is semantically correct.
+          </li>
+          <li><input class="form-check-input me-2" type="checkbox" disabled>Class output has no empty tokens or trailing
+            spaces.</li>
+          <li><input class="form-check-input me-2" type="checkbox" disabled checked>Tables use key-value rows.</li>
+          <li><input class="form-check-input me-2" type="checkbox" disabled>Mermaid diagrams have fallback behavior.
+          </li>
+          <li><input class="form-check-input me-2" type="checkbox" disabled checked>Forbidden presentation keys are
+            rejected.</li>
+          <li><input class="form-check-input me-2" type="checkbox" disabled checked>Bootstrap details do not leak into
+            DocIR.</li>
+          <li><input class="form-check-input me-2" type="checkbox" disabled>Include cycles are detected.</li>
+          <li><input class="form-check-input me-2" type="checkbox" disabled>Snapshot tests cover complex nested
+            documents.</li>
+        </ul>
+      </section>
+      <figure>
+        <h3>Working Definition</h3>
+        <blockquote class="blockquote">
+          <p>Agents should write structured meaning. Renderers should create human-readable output. Humans should review
+            the result in a browser.</p>
+        </blockquote>
+      </figure>
+      <section>
+        <h3>Related Files</h3>
+        <ul>
+          <li><a href="docs/goal.md">Project goal</a></li>
+          <li><a href="docs/index.yml">Entry document</a></li>
+          <li><a href="themes/default.yml">Default theme</a></li>
+          <li><a href="src/renderer/bootstrap/">Renderer implementation</a></li>
+        </ul>
+      </section>
+    </section>
+  </main>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: false });
+    for (const [index, block] of document.querySelectorAll(".mermaid-block").entries()) {
+      const source = block.querySelector(".mermaid-source");
+      const output = block.querySelector(".mermaid-output");
+      try {
+        const { svg } = await mermaid.render(`docir-mermaid-${index}`, source.textContent || "");
+        output.innerHTML = svg;
+        output.removeAttribute("aria-hidden");
+        source.hidden = true;
+      } catch (error) {
+        const message = document.createElement("p");
+        message.className = "alert alert-warning mt-2";
+        message.textContent = "Mermaid rendering failed. The diagram source is shown above.";
+        block.append(message);
+      }
+    }
+  </script>
+</body>
+
+</html>

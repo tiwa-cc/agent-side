@@ -293,30 +293,48 @@ Markdown exports DocIR back into readable Markdown.
 
 ## Output Samples
 
+Sample files:
+
+* [Source DocIR](samples/sample.yml)
+* [Default theme](samples/themes/default.yml)
+
+### Plain HTML renderer preview
+
 <p>
-  <a href="docs/assets/screenshots/plain.png">
+  <a href="samples/plain/plain.png">
     <img
-      src="docs/assets/screenshots/plain.png"
+      src="samples/plain/plain.png"
       alt="Plain HTML renderer preview"
-      width="180"
-      height="240"
-      style="object-fit: cover; object-position: top;"
-    >
-  </a>
-  <a href="docs/assets/screenshots/bootstrap.png">
-    <img
-      src="docs/assets/screenshots/bootstrap.png"
-      alt="Bootstrap HTML renderer preview"
-      width="180"
-      height="240"
+      width="240"
+      height="180"
       style="object-fit: cover; object-position: top;"
     >
   </a>
 </p>
 
-Files:
-<a href="docs/assets/screenshots/plain.png">Plain HTML screenshot</a>,
-<a href="docs/assets/screenshots/bootstrap.png">Bootstrap screenshot</a>
+* [Plain HTML sample](samples/plain/dist/index.html)
+* [Plain HTML screenshot](samples/plain/plain.png)
+
+### Bootstrap HTML renderer preview
+
+<p>
+  <a href="samples/bootstrap/bootstrap.png">
+    <img
+      src="samples/bootstrap/bootstrap.png"
+      alt="Bootstrap HTML renderer preview"
+      width="240"
+      height="180"
+      style="object-fit: cover; object-position: top;"
+    >
+  </a>
+</p>
+
+* [Bootstrap HTML sample](samples/bootstrap/dist/index.html)
+* [Bootstrap screenshot](samples/bootstrap/bootstrap.png)
+
+### Markdown renderer preview
+
+* [Markdown sample](samples/markdown/dist/index.md)
 
 ---
 
