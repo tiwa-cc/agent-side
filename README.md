@@ -87,8 +87,8 @@ agent-side is:
 * a foundation for future render targets
 
 agent-side is currently under active implementation.
-The available renderer is Bootstrap HTML.
-Other render targets and some block types described below are design goals, not complete features yet.
+The available renderers are Plain HTML, Bootstrap HTML, and Markdown.
+Some block types described below are design goals, not complete features yet.
 
 ---
 
@@ -148,7 +148,7 @@ page:
           rationale: Generated HTML is an artifact and should be easy to regenerate.
 ```
 
-Screenshots
+Screenshots:
 
 ![agent-side rendered preview](docs/assets/screenshots/index.png)
 
@@ -168,7 +168,7 @@ entry = "docs/index.yml"
 out_dir = "dist"
 
 [renderer]
-name = "bootstrap"
+name = "plain"
 theme = "default"
 
 [renderer.mermaid]
@@ -234,23 +234,55 @@ The loader should detect:
 
 ## Rendering
 
-The same DocIR is intended to be renderable into multiple targets over time.
+The same DocIR is intended to be renderable into multiple targets.
 
 Currently available:
 
+* Plain HTML
 * Bootstrap HTML
+* Markdown
 
 Planned or exploratory renderers:
 
 * Tailwind HTML
-* Plain HTML
 * PDF
 * email HTML
-* Markdown
 * GitHub Pages
 * WordPress blocks
 
-The first implemented renderer is Bootstrap HTML.
+Select the renderer with `[renderer].name` in `docir.toml`:
+
+```toml
+[renderer]
+name = "plain"
+```
+
+Supported values:
+
+* `plain`
+* `bootstrap`
+* `markdown`
+
+Plain HTML is the baseline renderer and works well with the default `single` output mode.
+Bootstrap HTML is the enhanced browser preview renderer.
+Markdown exports DocIR back into readable Markdown.
+
+---
+
+## Output Samples
+
+<p>
+  <a href="docs/assets/screenshots/plain.png">
+    <img src="docs/assets/screenshots/plain.png" alt="Plain HTML renderer preview" width="180">
+  </a>
+  <a href="docs/assets/screenshots/bootstrap.png">
+    <img src="docs/assets/screenshots/bootstrap.png" alt="Bootstrap HTML renderer preview" width="180">
+  </a>
+</p>
+
+Files:
+[Plain HTML screenshot](docs/assets/screenshots/plain.png),
+[Bootstrap screenshot](docs/assets/screenshots/bootstrap.png)
 
 ---
 
@@ -550,6 +582,13 @@ agent-side render docs/index.yml --out dist
 agent-side preview
 ```
 
+Renderer selection is configured in `docir.toml`:
+
+```toml
+[renderer]
+name = "plain"      # plain | bootstrap | markdown
+```
+
 Render output modes:
 
 ```bash
@@ -558,7 +597,7 @@ agent-side render docs/index.yml --out dist --mode bundle
 agent-side render docs/index.yml --out dist --mode site
 ```
 
-`single` is the default and writes only `dist/index.html`.
+`single` is the default. HTML renderers write `dist/index.html`; the Markdown renderer writes `dist/index.md`.
 `bundle` and `site` currently write `index.html` plus `assets/agent-side.css`.
 
 ---
