@@ -295,16 +295,28 @@ Markdown exports DocIR back into readable Markdown.
 
 <p>
   <a href="docs/assets/screenshots/plain.png">
-    <img src="docs/assets/screenshots/plain.png" alt="Plain HTML renderer preview" width="180">
+    <img
+      src="docs/assets/screenshots/plain.png"
+      alt="Plain HTML renderer preview"
+      width="180"
+      height="240"
+      style="object-fit: cover; object-position: top;"
+    >
   </a>
   <a href="docs/assets/screenshots/bootstrap.png">
-    <img src="docs/assets/screenshots/bootstrap.png" alt="Bootstrap HTML renderer preview" width="180">
+    <img
+      src="docs/assets/screenshots/bootstrap.png"
+      alt="Bootstrap HTML renderer preview"
+      width="180"
+      height="240"
+      style="object-fit: cover; object-position: top;"
+    >
   </a>
 </p>
 
 Files:
-[Plain HTML screenshot](docs/assets/screenshots/plain.png),
-[Bootstrap screenshot](docs/assets/screenshots/bootstrap.png)
+<a href="docs/assets/screenshots/plain.png">Plain HTML screenshot</a>,
+<a href="docs/assets/screenshots/bootstrap.png">Bootstrap screenshot</a>
 
 ---
 
