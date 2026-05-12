@@ -845,36 +845,205 @@ Do not duplicate render or validation logic inside CLI command handlers.
 
 ### Package shape
 
+The npm package name should be `agent-side` if the name is available on npm.
+
 Recommended initial `package.json` shape:
 
 ```json
 {
   "name": "agent-side",
   "version": "0.1.0",
+  "description": "AI-safe document rendering layer where agents write structured meaning and renderers generate human-readable output.",
   "type": "module",
+  "license": "MIT",
+  "homepage": "https://github.com/tiwa-cc/agent-side#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tiwa-cc/agent-side.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tiwa-cc/agent-side/issues"
+  },
+  "keywords": [
+    "ai",
+    "ai-agent",
+    "document-generation",
+    "yaml",
+    "renderer",
+    "typescript",
+    "bootstrap",
+    "mermaid",
+    "static-site-generator",
+    "docir"
+  ],
   "bin": {
-    "agent-side": "./dist/cli/main.js"
+    "agent-side": "./lib/cli/main.js"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./core": "./dist/core/index.js",
-    "./renderer/bootstrap": "./dist/renderer/bootstrap/index.js"
+    ".": "./lib/index.js",
+    "./core": "./lib/core/index.js",
+    "./renderer/bootstrap": "./lib/renderer/bootstrap/index.js",
+    "./renderer/plain": "./lib/renderer/plain/index.js",
+    "./renderer/markdown": "./lib/renderer/markdown/index.js"
   },
+  "types": "./lib/index.d.ts",
   "files": [
-    "dist",
+    "lib",
     "templates",
     "themes",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "dev": "tsx src/cli/main.ts",
     "test": "vitest",
+    "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm build && pnpm test"
   }
 }
 ```
+
+### Build output convention
+
+The project must keep npm package build output separate from rendered document output.
+
+Use this convention:
+
+```text
+lib/   = TypeScript build output for npm package publication
+dist/  = generated document/site output from `agent-side render`
+```
+
+`lib/` should contain compiled JavaScript and declaration files produced from `src/`.
+`dist/` should contain generated HTML output such as `dist/index.html`.
+
+Do not use `dist/` as the TypeScript package build output directory.
+This prevents npm package artifacts from being mixed with generated review HTML.
+
+Both `lib/` and `dist/` are generated outputs and should normally be ignored by Git.
+They should not be committed.
+
+Test snapshots are different and should remain under version control.
+
+### TypeScript build configuration
+
+`tsconfig.build.json` should emit package build output to `lib/`.
+
+Recommended shape:
+
+```json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "lib",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noEmit": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/preview/**", "tests/**", "vite.config.ts"]
+}
+```
+
+### npm publish contents
+
+The published npm package should include only files needed by package users.
+
+Expected included files:
+
+```text
+lib/
+templates/
+themes/
+README.md
+LICENSE
+package.json
+```
+
+Expected excluded files:
+
+```text
+src/
+tests/
+coverage/
+dist/
+.env
+.vscode/
+docs/goal.md
+```
+
+Use the `files` whitelist in `package.json` to control published contents.
+
+Before publishing, verify contents with:
+
+```bash
+npm pack --dry-run
+```
+
+### CLI shebang
+
+The CLI source file must start with a Node.js shebang.
+
+```ts
+#!/usr/bin/env node
+```
+
+The shebang must be on its own first line.
+
+After build, the compiled CLI entrypoint must also start with:
+
+```js
+#!/usr/bin/env node
+```
+
+The npm `bin` field should point to the compiled CLI file under `lib/`.
+
+### npm publication workflow
+
+The first npm publication may be done manually.
+
+Recommended manual verification flow:
+
+```bash
+pnpm install
+pnpm typecheck
+pnpm test
+pnpm build
+npm pack --dry-run
+```
+
+Optional tarball test:
+
+```bash
+npm pack
+mkdir -p /tmp/agent-side-publish-test
+cd /tmp/agent-side-publish-test
+npm init -y
+npm install /path/to/agent-side/agent-side-0.1.0.tgz
+npx agent-side --help
+npx agent-side init
+npx agent-side validate docs/index.yml
+npx agent-side render docs/index.yml --out dist
+```
+
+Do not publish unless build, tests, package contents, and tarball usage have been reviewed.
+
+The actual publish command for the unscoped package is:
+
+```bash
+npm publish
+```
+
+If the package is ever renamed to a scoped package, use public access explicitly:
+
+```bash
+npm publish --access public
+```
+
+Future automation may use npm Trusted Publishing from GitHub Actions, but the first release can be manual.
 
 ### Internal structure
 

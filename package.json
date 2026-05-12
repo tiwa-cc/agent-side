@@ -1,29 +1,71 @@
 {
   "name": "agent-side",
   "version": "0.1.0",
+  "description": "AI-safe document rendering layer where agents write structured meaning and renderers generate human-readable output.",
+  "license": "MIT",
   "type": "module",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "packageManager": "pnpm@10.10.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tiwa-cc/agent-side.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tiwa-cc/agent-side/issues"
+  },
+  "homepage": "https://github.com/tiwa-cc/agent-side#readme",
+  "keywords": [
+    "ai",
+    "ai-agent",
+    "document-generation",
+    "yaml",
+    "renderer",
+    "typescript",
+    "bootstrap",
+    "mermaid",
+    "static-site-generator",
+    "docir"
+  ],
   "bin": {
-    "agent-side": "./dist/cli/main.js"
+    "agent-side": "./lib/cli/main.js"
   },
   "exports": {
-    ".": "./dist/index.js",
-    "./core": "./dist/core/index.js",
-    "./renderer/bootstrap": "./dist/renderer/bootstrap/index.js",
-    "./renderer/plain": "./dist/renderer/plain/index.js",
-    "./renderer/markdown": "./dist/renderer/markdown/index.js"
+    ".": {
+      "types": "./lib/index.d.ts",
+      "import": "./lib/index.js"
+    },
+    "./core": {
+      "types": "./lib/core/index.d.ts",
+      "import": "./lib/core/index.js"
+    },
+    "./renderer/bootstrap": {
+      "types": "./lib/renderer/bootstrap/index.d.ts",
+      "import": "./lib/renderer/bootstrap/index.js"
+    },
+    "./renderer/plain": {
+      "types": "./lib/renderer/plain/index.d.ts",
+      "import": "./lib/renderer/plain/index.js"
+    },
+    "./renderer/markdown": {
+      "types": "./lib/renderer/markdown/index.d.ts",
+      "import": "./lib/renderer/markdown/index.js"
+    },
+    "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts",
   "files": [
-    "dist",
-    "!dist/index.html",
+    "lib",
     "templates",
     "themes",
     "README.md",
     "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "clean": "node -e \"require('node:fs').rmSync('lib', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json",
     "dev": "tsx src/cli/main.ts",
     "validate": "tsx src/cli/main.ts validate docs/index.yml",
     "render": "tsx src/cli/main.ts render docs/index.yml --out dist",
