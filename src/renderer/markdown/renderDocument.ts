@@ -37,7 +37,7 @@ function renderMarkdownBlock(block: Block, level: number): string {
     case "cards":
       return [heading(block.title, level), block.items.map((item) => [heading(item.title, 3), item.body ?? item.text ? renderInlineMarkdown(item.body ?? item.text ?? "") : "", markdownLink("Open", item.href)].filter(Boolean).join("\n\n")).join("\n\n")].filter(Boolean).join("\n\n");
     case "compare":
-      return [heading(block.title, level), (block.options ?? block.items ?? []).map((item) => Object.entries(item).map(([key, value]) => `- **${escapeInline(key)}:** ${renderInlineMarkdown(value)}`).join("\n")).join("\n\n")].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), (block.options ?? block.items ?? []).map((item) => Object.entries(item).map(([key, value]) => `- **${escapeInline(key)}:** ${escapeText(stringify(value))}`).join("\n")).join("\n\n")].filter(Boolean).join("\n\n");
     case "code":
       return [heading(block.title, level), fenced(block.language ?? "", block.code)].filter(Boolean).join("\n\n");
     case "command":
@@ -123,7 +123,11 @@ function escapeLinkDestination(value: string): string {
 }
 
 function escapeTableCell(value: unknown): string {
-  return renderInlineMarkdown(value).replace(/\r?\n/g, " ");
+  return escapeTableCodePipes(renderInlineMarkdown(value)).replace(/ {2,}\r?\n/g, "<br>").replace(/\r?\n/g, "<br>");
+}
+
+function escapeTableCodePipes(value: string): string {
+  return value.replace(/(`+)([\s\S]*?)\1/g, (_match: string, fence: string, content: string) => `${fence}${content.replace(/\|/g, "\\|")}${fence}`);
 }
 
 function quoteText(value: unknown): string {

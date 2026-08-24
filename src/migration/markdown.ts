@@ -76,8 +76,9 @@ export function migrateMarkdown(source: string, options: MarkdownMigrationOption
   const tree = markdownProcessor.runSync(markdownProcessor.parse(source)) as unknown as HastRoot;
   const firstH1 = findFirstHeading(tree.children, 1);
   const firstH1Title = firstH1 ? plainText(firstH1) : "";
-  const title = options.title?.trim() || firstH1Title || fallbackTitle(options.sourcePath);
-  const blocks = convertRoot(tree, warnings, firstH1);
+  const explicitTitle = options.title?.trim();
+  const title = explicitTitle || firstH1Title || fallbackTitle(options.sourcePath);
+  const blocks = convertRoot(tree, warnings, firstH1, !explicitTitle);
   const doc = docSchema.parse({ title, blocks }) as DocIR;
   return { doc, warnings };
 }
@@ -104,7 +105,7 @@ export async function migrateMarkdownFile(options: MigrateMarkdownFileOptions): 
   return result;
 }
 
-function convertRoot(root: HastRoot, warnings: MarkdownMigrationWarning[], firstH1: HastElement | undefined): Block[] {
+function convertRoot(root: HastRoot, warnings: MarkdownMigrationWarning[], firstH1: HastElement | undefined, consumeFirstH1: boolean): Block[] {
   const blocks: Block[] = [];
   const sections: SectionEntry[] = [];
   let firstH1Consumed = false;
@@ -112,7 +113,7 @@ function convertRoot(root: HastRoot, warnings: MarkdownMigrationWarning[], first
   for (const node of root.children) {
     if (isElement(node) && headingLevel(node) !== undefined) {
       const level = headingLevel(node) ?? 2;
-      if (node === firstH1 && !firstH1Consumed) {
+      if (consumeFirstH1 && node === firstH1 && !firstH1Consumed) {
         firstH1Consumed = true;
         continue;
       }
@@ -192,17 +193,26 @@ function convertListItem(node: HastElement, warnings: MarkdownMigrationWarning[]
   const input = children.find((child) => isElement(child) && child.tagName === "input" && propertyString(child.properties.type) === "checkbox");
   const checked = input && isElement(input) ? input.properties.checked === true : undefined;
   const inlineChildren = children.filter((child) => !(isElement(child) && (child.tagName === "input" || child.tagName === "ul" || child.tagName === "ol")));
-  const nested = children.find((child) => isElement(child) && (child.tagName === "ul" || child.tagName === "ol"));
+  const nested = children.find((child): child is HastElement => isElement(child) && (child.tagName === "ul" || child.tagName === "ol"));
   let text = richText(inlineChildren, warnings);
 
   if (input) text = trimTaskPrefix(text);
   if (nested) {
     addWarning(warnings, nested, "Nested list content was flattened into its parent list item.");
-    const nestedText = plainText(nested);
-    text = appendText(text, `\n${nestedText}`);
+    const nestedText = flattenNestedList(nested, warnings);
+    text = appendRichText(text, nestedText, "\n");
   }
 
   return checked === undefined ? { text } : { text, checked };
+}
+
+function flattenNestedList(node: HastElement, warnings: MarkdownMigrationWarning[]): RichText {
+  const items = node.children.filter(isElement).filter((child) => child.tagName === "li");
+  return items.reduce<RichText>((result, item, index) => {
+    const converted = convertListItem(item, warnings);
+    const itemText = converted.checked === undefined ? converted.text : prefixTask(converted.text, converted.checked);
+    return appendRichText(result, itemText, index === 0 ? "" : "\n");
+  }, "");
 }
 
 function convertCode(node: HastElement): Block {
@@ -281,31 +291,39 @@ function appendInline(target: InlineNode[], node: HastNode, warnings: MarkdownMi
   const children = () => richTextNodes(node.children, warnings);
   switch (node.tagName) {
     case "strong":
-    case "b":
-      target.push({ type: "strong", children: children() });
+    case "b": {
+      const nested = children();
+      if (nested.length > 0) target.push({ type: "strong", children: nested });
       return;
+    }
     case "em":
-    case "i":
-      target.push({ type: "em", children: children() });
+    case "i": {
+      const nested = children();
+      if (nested.length > 0) target.push({ type: "em", children: nested });
       return;
+    }
     case "del":
     case "s":
-    case "strike":
-      target.push({ type: "del", children: children() });
+    case "strike": {
+      const nested = children();
+      if (nested.length > 0) target.push({ type: "del", children: nested });
       return;
+    }
     case "code":
       target.push({ type: "inlineCode", text: plainText(node) });
       return;
     case "a": {
       const href = propertyString(node.properties.href);
       const safe = safeHref(href);
+      const nested = children();
       if (!safe) {
         addWarning(warnings, node, "Unsafe link destination was converted to link text.");
-        target.push(...children());
+        target.push(...nested);
         return;
       }
+      if (nested.length === 0) return;
       const title = propertyString(node.properties.title);
-      target.push(title ? { type: "link", href: safe, title, children: children() } : { type: "link", href: safe, children: children() });
+      target.push(title ? { type: "link", href: safe, title, children: nested } : { type: "link", href: safe, children: nested });
       return;
     }
     case "br":
@@ -358,15 +376,6 @@ function trimTaskPrefix(value: RichText): RichText {
 function prefixTask(value: RichText, checked: boolean): RichText {
   const prefix: InlineNode = { type: "text", text: checked ? "[x] " : "[ ] " };
   return typeof value === "string" ? `${prefix.text}${value}` : [prefix, ...value];
-}
-
-function appendText(value: RichText, suffix: string): RichText {
-  if (typeof value === "string") return `${value}${suffix}`;
-  const nodes = [...value];
-  const last = nodes.at(-1);
-  if (last?.type === "text") last.text += suffix;
-  else nodes.push({ type: "text", text: suffix });
-  return nodes;
 }
 
 function appendRichText(value: RichText, next: RichText, separator: string): RichText {
