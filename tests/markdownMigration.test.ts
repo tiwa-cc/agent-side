@@ -67,6 +67,25 @@ describe("Markdown migration", () => {
     expect(migrateMarkdown("No heading", { title: "Explicit title", sourcePath: "docs/example.md" }).doc.title).toBe("Explicit title");
   });
 
+  it.each([
+    ["an empty Markdown link", "[](https://example.com)"],
+    ["an empty HTML anchor", '<a href="#top"></a>'],
+    ["an empty strong element", "<strong></strong>"],
+    ["an empty emphasis element", "<em></em>"],
+    ["an empty deletion element", "<del></del>"],
+  ])("does not abort migration for %s", (_label, source) => {
+    expect(() => migrateMarkdown(source)).not.toThrow();
+  });
+
+  it("keeps the first h1 as content when an explicit document title overrides it", () => {
+    const result = migrateMarkdown(["# Real Heading", "", "body"].join("\n"), { title: "Override" });
+
+    expect(result.doc).toMatchObject({
+      title: "Override",
+      blocks: [{ type: "section", title: "Real Heading", blocks: [{ type: "paragraph", text: "body" }] }],
+    });
+  });
+
   it("warns and safely falls back for unsafe links and unsupported HTML", async () => {
     const result = migrateMarkdown('<strong class="custom">safe</strong> <script>alert(1)</script> [bad](javascript:alert(1)) ![bad](javascript:image)', { sourcePath: "input.md" });
 
@@ -101,6 +120,22 @@ describe("Markdown migration", () => {
     } finally {
       await rm(root, { recursive: true, force: true });
     }
+  });
+
+  it("preserves inline formatting and task state when flattening nested lists", () => {
+    const result = migrateMarkdown(
+      ["- parent", "  - **nested** [link](https://example.com)", "  - [x] checked"].join("\n"),
+    );
+    const list = result.doc.blocks[0] as { type: "list"; items: unknown[] };
+    const item = list.items[0];
+
+    expect(item).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: "strong" }),
+        expect.objectContaining({ type: "link", href: "https://example.com" }),
+      ]),
+    );
+    expect(JSON.stringify(item)).toContain("[x]");
   });
 
   it("strips unknown keys inside inline nodes in strip mode", async () => {

@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { resolve } from "pathe";
+import type { DocIR, Block } from "../src/ast/types.js";
 import type { DocirConfig } from "../src/config/configSchema.js";
 import { loadProject } from "../src/core/loadProject.js";
 import { renderProject } from "../src/core/renderProject.js";
 import { validateDoc } from "../src/core/validateDoc.js";
 import { parseOutputMode } from "../src/cli/outputMode.js";
+import { renderBlock } from "../src/renderer/bootstrap/renderBlock.js";
 import { renderDocument } from "../src/renderer/bootstrap/renderDocument.js";
 import { renderMarkdownDocument } from "../src/renderer/markdown/renderDocument.js";
 
@@ -218,8 +220,55 @@ describe("renderer safety", () => {
     expect(markdown).toContain("\\[label\\]\\(javascript:bad\\)");
     expect(markdown).toContain("\\<html\\>");
     expect(markdown).toContain("| Pipe \\| Label |");
-    expect(markdown).toContain("| cell \\| value next line |");
+    expect(markdown).toContain("| cell \\| value<br>next line |");
     expect(markdown).toContain("````md\n```inside```\n````");
+  });
+
+  it("renders compare values consistently with the bootstrap renderer", () => {
+    const compare: Extract<Block, { type: "compare" }> = {
+      type: "compare",
+      title: "Options",
+      options: [{ pros: ["fast", "cheap"], nested: { value: "x" } }],
+    };
+    const doc: DocIR = { title: "Compare", blocks: [compare] };
+
+    const markdown = renderMarkdownDocument(doc);
+    const bootstrap = renderBlock(compare, { headingLevel: 2 });
+
+    expect(bootstrap).toContain("fast, cheap");
+    expect(bootstrap).toContain("> x");
+    expect(markdown).toContain("- **pros:** fast, cheap");
+    expect(markdown).toContain("- **nested:** x");
+  });
+
+  it("escapes pipes in inline code inside Markdown table cells", () => {
+    const markdown = renderMarkdownDocument({
+      title: "Table",
+      blocks: [
+        {
+          type: "table",
+          columns: [{ key: "value", label: "Value" }],
+          rows: [{ value: [{ type: "inlineCode", text: "a|b" }] }],
+        },
+      ],
+    });
+
+    expect(markdown).toContain("a\\|b");
+  });
+
+  it("preserves explicit line breaks in Markdown table cells", () => {
+    const markdown = renderMarkdownDocument({
+      title: "Table",
+      blocks: [
+        {
+          type: "table",
+          columns: [{ key: "value", label: "Value" }],
+          rows: [{ value: [{ type: "text", text: "before" }, { type: "break" }, { type: "text", text: "after" }] }],
+        },
+      ],
+    });
+
+    expect(markdown).toContain("before<br>after");
   });
 
   it("escapes Markdown link destinations", () => {
