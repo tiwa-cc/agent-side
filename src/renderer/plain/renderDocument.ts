@@ -2,6 +2,7 @@ import type { Block, DocIR, TableBlock } from "../../ast/types.js";
 import { escapeHtml as escape } from "../../utils/html.js";
 import type { RenderContext } from "../types.js";
 import { asArray, labelize, objectRecord, safeHref, stringify } from "../shared.js";
+import { renderInlineHtml } from "../inline.js";
 
 export function renderPlainDocument(doc: DocIR, context: RenderContext): string {
   const lang = doc.lang ?? context.config.site.lang ?? "en";
@@ -50,19 +51,19 @@ function renderPlainBlock(block: Block, level: number): string {
     case "section":
       return `<section>${heading(block.title, level)}${block.blocks.map((child) => renderPlainBlock(child, next(level))).join("\n")}</section>`;
     case "paragraph":
-      return `${heading(block.title, level)}<p>${escape(block.text)}</p>`;
+      return `${heading(block.title, level)}<p>${renderInlineHtml(block.text)}</p>`;
     case "list":
-      return `${heading(block.title, level)}<${block.ordered ? "ol" : "ul"}>${block.items.map((item) => `<li>${escape(item)}</li>`).join("")}</${block.ordered ? "ol" : "ul"}>`;
+      return `${heading(block.title, level)}<${block.ordered ? "ol" : "ul"}>${block.items.map((item) => `<li>${renderInlineHtml(item)}</li>`).join("")}</${block.ordered ? "ol" : "ul"}>`;
     case "notice":
-      return `<aside class="notice">${heading(block.title, level)}<p>${escape(block.text ?? block.body ?? "")}</p></aside>`;
+      return `<aside class="notice">${heading(block.title, level)}<p>${renderInlineHtml(block.text ?? block.body ?? "")}</p></aside>`;
     case "decision":
-      return `<article>${heading(block.title, level)}<p><strong>Decision:</strong> ${escape(block.decision)}</p>${block.rationale ? `<p><strong>Rationale:</strong> ${escape(block.rationale)}</p>` : ""}</article>`;
+      return `<article>${heading(block.title, level)}<p><strong>Decision:</strong> ${renderInlineHtml(block.decision)}</p>${block.rationale ? `<p><strong>Rationale:</strong> ${renderInlineHtml(block.rationale)}</p>` : ""}</article>`;
     case "risk":
-      return `<article>${heading(block.title, level)}<p><strong>Risk:</strong> ${escape(block.risk)}</p>${block.mitigation ? `<p><strong>Mitigation:</strong> ${escape(block.mitigation)}</p>` : ""}</article>`;
+      return `<article>${heading(block.title, level)}<p><strong>Risk:</strong> ${renderInlineHtml(block.risk)}</p>${block.mitigation ? `<p><strong>Mitigation:</strong> ${renderInlineHtml(block.mitigation)}</p>` : ""}</article>`;
     case "table":
       return renderTable(block, level);
     case "cards":
-      return `<section>${heading(block.title, level)}${block.items.map((item) => `<article>${heading(item.title, next(level))}${item.body ?? item.text ? `<p>${escape(item.body ?? item.text ?? "")}</p>` : ""}${safeHref(item.href) ? `<p><a href="${escape(safeHref(item.href) ?? "")}">Open</a></p>` : ""}</article>`).join("")}</section>`;
+      return `<section>${heading(block.title, level)}${block.items.map((item) => `<article>${heading(item.title, next(level))}${item.body ?? item.text ? `<p>${renderInlineHtml(item.body ?? item.text ?? "")}</p>` : ""}${safeHref(item.href) ? `<p><a href="${escape(safeHref(item.href) ?? "")}">Open</a></p>` : ""}</article>`).join("")}</section>`;
     case "compare":
       return `<section>${heading(block.title, level)}${(block.options ?? block.items ?? []).map((item) => `<article>${Object.entries(item).map(([key, value]) => `<p><strong>${escape(labelize(key))}:</strong> ${escape(stringify(value))}</p>`).join("")}</article>`).join("")}</section>`;
     case "code":
@@ -75,19 +76,19 @@ function renderPlainBlock(block: Block, level: number): string {
     case "summary":
     case "issue":
     case "quote":
-      return `${heading(block.title, level)}<p>${escape(String(block.body ?? ""))}</p>`;
+      return `${heading(block.title, level)}<p>${renderInlineHtml(block.body ?? "")}</p>`;
     case "points":
     case "constraint":
     case "assumption":
-      return `${heading(block.title, level)}<ul>${asArray(block.items).map((item) => `<li>${escape(stringify(item))}</li>`).join("")}</ul>`;
+      return `${heading(block.title, level)}<ul>${asArray(block.items).map((item) => `<li>${renderInlineHtml(item)}</li>`).join("")}</ul>`;
     case "keyValue":
-      return `${heading(block.title, level)}<dl>${asArray(block.items).map((item) => objectRecord(item)).map((item) => `<dt>${escape(stringify(item.key))}</dt><dd>${escape(stringify(item.value))}</dd>`).join("")}</dl>`;
+      return `${heading(block.title, level)}<dl>${asArray(block.items).map((item) => objectRecord(item)).map((item) => `<dt>${escape(stringify(item.key))}</dt><dd>${renderInlineHtml(item.value)}</dd>`).join("")}</dl>`;
     case "openQuestion":
-      return `<article>${heading(block.title, level)}<p><strong>Question:</strong> ${escape(String(block.question ?? ""))}</p>${block.context ? `<p><strong>Context:</strong> ${escape(String(block.context))}</p>` : ""}</article>`;
+      return `<article>${heading(block.title, level)}<p><strong>Question:</strong> ${renderInlineHtml(block.question ?? "")}</p>${block.context ? `<p><strong>Context:</strong> ${renderInlineHtml(block.context)}</p>` : ""}</article>`;
     case "todo":
       return `${heading(block.title, level)}<ul>${asArray(block.items).map((item) => objectRecord(item)).map((item) => `<li>${escape(stringify(item.title))}${item.status ? ` (${escape(stringify(item.status))})` : ""}</li>`).join("")}</ul>`;
     case "checklist":
-      return `${heading(block.title, level)}<ul>${asArray(block.items).map((item) => objectRecord(item)).map((item) => `<li>${item.checked ? "[x]" : "[ ]"} ${escape(stringify(item.label))}</li>`).join("")}</ul>`;
+      return `${heading(block.title, level)}<ul>${asArray(block.items).map((item) => objectRecord(item)).map((item) => `<li>${item.checked ? "[x]" : "[ ]"} ${renderInlineHtml(item.label)}</li>`).join("")}</ul>`;
     case "reference":
       return `${heading(block.title, level)}<ul>${asArray(block.items).map((item) => objectRecord(item)).map((item) => {
         const href = safeHref(stringify(item.path));
@@ -104,7 +105,7 @@ function renderTable(block: TableBlock, level: number): string {
   return `<section>${heading(block.title, level)}<table><thead><tr>${block.columns.map((column) => `<th>${escape(column.label)}</th>`).join("")}</tr></thead><tbody>${block.rows
     .map((row) => {
       const record = Array.isArray(row) ? {} : row;
-      return `<tr>${block.columns.map((column) => `<td>${escape(String(record[column.key] ?? ""))}</td>`).join("")}</tr>`;
+      return `<tr>${block.columns.map((column) => `<td>${renderInlineHtml(record[column.key] ?? "")}</td>`).join("")}</tr>`;
     })
     .join("")}</tbody></table></section>`;
 }
