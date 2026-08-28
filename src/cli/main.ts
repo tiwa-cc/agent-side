@@ -5,10 +5,11 @@ import { renderCommand } from "./commands/render.js";
 import { validateCommand } from "./commands/validate.js";
 import { previewCommand } from "./commands/preview.js";
 import { initCommand } from "./commands/init.js";
+import { migrateMarkdownCommand } from "./commands/migrate.js";
 
 const program = new Command();
 
-program.name("agent-side").description("Render YAML DocIR documents to readable HTML").version("0.1.0");
+program.name("agent-side").description("Migrate Markdown and render YAML DocIR documents").version("0.1.0");
 
 program
   .command("init")
@@ -38,6 +39,15 @@ program
   .option("-p, --port <port>", "preview port", "4173")
   .action((entry, options) => run(() => previewCommand(entry, options)));
 
+const migrate = program.command("migrate").description("Convert existing documents into agent-side files");
+
+migrate
+  .command("markdown <input>")
+  .requiredOption("-o, --out <file>", "output DocIR YAML file")
+  .option("--title <title>", "document title override")
+  .option("--force", "overwrite an existing output file")
+  .action((input, options) => run(() => migrateMarkdownCommand({ input, ...options })));
+
 program.addHelpText(
   "after",
   `
@@ -47,6 +57,7 @@ Examples:
   $ agent-side validate docs/index.yml
   $ agent-side render docs/index.yml --out dist
   $ agent-side preview
+  $ agent-side migrate markdown README.md --out docs/index.yml
 
 DocIR:
   agent-side uses YAML DocIR as its document DSL.

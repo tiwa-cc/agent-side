@@ -4,6 +4,20 @@ export type Width = "normal" | "wide" | "full";
 export type Align = "left" | "center" | "right";
 export type Priority = "low" | "normal" | "high";
 
+export type InlineNode =
+  | { type: "text"; text: string }
+  | { type: "strong"; children: InlineNode[] }
+  | { type: "em"; children: InlineNode[] }
+  | { type: "del"; children: InlineNode[] }
+  | { type: "inlineCode"; text: string }
+  | { type: "link"; href: string; title?: string; children: InlineNode[] }
+  | { type: "break" }
+  | { type: "image"; src: string; alt: string; title?: string };
+
+export type RichText = string | InlineNode[];
+
+export type TableCell = RichText | number | boolean | null;
+
 export interface DocIR {
   title: string;
   lang?: string;
@@ -33,32 +47,32 @@ export interface SectionBlock extends BaseBlock {
 
 export interface ParagraphBlock extends BaseBlock {
   type: "paragraph";
-  text: string;
+  text: RichText;
 }
 
 export interface ListBlock extends BaseBlock {
   type: "list";
-  items: string[];
+  items: RichText[];
   ordered?: boolean;
 }
 
 export interface NoticeBlock extends BaseBlock {
   type: "notice";
-  text?: string;
-  body?: string;
+  text?: RichText;
+  body?: RichText;
 }
 
 export interface DecisionBlock extends BaseBlock {
   type: "decision";
-  decision: string;
-  rationale?: string;
+  decision: RichText;
+  rationale?: RichText;
 }
 
 export interface RiskBlock extends BaseBlock {
   type: "risk";
-  risk: string;
-  impact?: string;
-  mitigation?: string;
+  risk: RichText;
+  impact?: RichText;
+  mitigation?: RichText;
 }
 
 export interface CompareBlock extends BaseBlock {
@@ -69,13 +83,13 @@ export interface CompareBlock extends BaseBlock {
 
 export interface CardsBlock extends BaseBlock {
   type: "cards";
-  items: Array<{ title: string; text?: string; body?: string; href?: string; badge?: string }>;
+  items: Array<{ title: string; text?: RichText; body?: RichText; href?: string; badge?: string }>;
 }
 
 export interface TableBlock extends BaseBlock {
   type: "table";
   columns: Array<{ key: string; label: string }>;
-  rows: Array<Record<string, string | number | boolean | null> | unknown[]>;
+  rows: Array<Record<string, TableCell> | unknown[]>;
 }
 
 export interface CodeBlock extends BaseBlock {

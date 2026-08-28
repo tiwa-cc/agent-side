@@ -621,6 +621,7 @@ agent-side init
 agent-side validate
 agent-side render
 agent-side preview
+agent-side migrate markdown
 ```
 
 `preview` renders the document and serves the generated output locally.
@@ -633,7 +634,24 @@ npx agent-side init
 npx agent-side validate docs/index.yml
 npx agent-side render docs/index.yml --out dist
 npx agent-side preview
+npx agent-side migrate markdown README.md --out docs/index.yml
 ```
+
+### Markdown migration
+
+Migrate an existing UTF-8 Markdown file into a single agent-side DocIR YAML file:
+
+```bash
+npx agent-side migrate markdown README.md --out docs/index.yml
+```
+
+The migration supports common GFM structures such as headings, paragraphs, lists, task lists, blockquotes, fenced code, tables, links, images, and strikethrough. The first `h1` becomes the document title. Use `--title` to override it:
+
+```bash
+npx agent-side migrate markdown README.md --out docs/index.yml --title "Project Guide"
+```
+
+Existing output files are protected by default. Pass `--force` to overwrite one intentionally. Unsupported constructs are preserved through safe fallbacks and reported as warnings; raw HTML is never copied into generated DocIR.
 
 Renderer selection is configured in `docir.toml`:
 
@@ -682,6 +700,16 @@ import { renderProject } from "agent-side";
 
 await renderProject({
   configPath: "docir.toml",
+});
+```
+
+Markdown migration is also available as a library API:
+
+```ts
+import { migrateMarkdown } from "agent-side";
+
+const { doc, warnings } = migrateMarkdown(markdownSource, {
+  sourcePath: "README.md",
 });
 ```
 

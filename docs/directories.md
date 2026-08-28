@@ -39,6 +39,7 @@
         - validate.ts
         - preview.ts
         - render.ts
+        - migrate.ts
     - core/
       - index.ts
       - loadProject.ts
@@ -55,6 +56,7 @@
       - validateDoc.ts
     - renderer/
       - shared.ts
+      - inline.ts
       - types.ts
       - bootstrap/
         - index.ts
@@ -67,6 +69,8 @@
       - plain/
         - index.ts
         - renderDocument.ts
+    - migration/
+      - markdown.ts
     - ast/
       - normalize.ts
       - types.ts
@@ -77,6 +81,7 @@
     - schema/
       - blockSchemas.ts
       - docSchema.ts
+      - inlineSchema.ts
       - themeSchema.ts
     - utils/
       - html.ts

@@ -78,6 +78,32 @@ const blockKeys: Record<string, Set<string>> = {
   fileTree: new Set(["root", "items"]),
 };
 
+const inlineNodeKeys: Record<string, Set<string>> = {
+  text: new Set(["text"]),
+  strong: new Set(["children"]),
+  em: new Set(["children"]),
+  del: new Set(["children"]),
+  inlineCode: new Set(["text"]),
+  link: new Set(["href", "title", "children"]),
+  break: new Set(),
+  image: new Set(["src", "alt", "title"]),
+};
+
+const richTextBlockKeys: Record<string, Set<string>> = {
+  paragraph: new Set(["text"]),
+  summary: new Set(["body"]),
+  points: new Set(["items"]),
+  list: new Set(["items"]),
+  notice: new Set(["text", "body"]),
+  decision: new Set(["decision", "rationale"]),
+  risk: new Set(["risk", "impact", "mitigation"]),
+  constraint: new Set(["items"]),
+  assumption: new Set(["items"]),
+  openQuestion: new Set(["question", "context"]),
+  issue: new Set(["body"]),
+  quote: new Set(["body"]),
+};
+
 const itemKeys: Record<string, Record<string, Set<string>>> = {
   cards: { items: new Set(["title", "text", "body", "href", "badge"]) },
   keyValue: { items: new Set(["key", "value"]) },
@@ -95,10 +121,23 @@ function stripUnknownKeys(value: unknown): unknown {
   if ("page" in value && isRecord(value.page)) {
     return { page: stripObject(value.page, docKeys) };
   }
+  if ("type" in value && typeof value.type === "string" && value.type in inlineNodeKeys) {
+    return stripInlineNode(value);
+  }
   if ("type" in value && typeof value.type === "string") {
     return stripBlock(value);
   }
   return stripObject(value, docKeys);
+}
+
+function stripInlineNode(node: Record<string, unknown>): Record<string, unknown> {
+  const allowed = new Set(["type", ...(inlineNodeKeys[String(node.type)] ?? [])]);
+  const result: Record<string, unknown> = {};
+  for (const [key, entry] of Object.entries(node)) {
+    if (!allowed.has(key)) continue;
+    result[key] = key === "children" && Array.isArray(entry) ? entry.map((child) => stripUnknownKeys(child)) : stripUnknownKeys(entry);
+  }
+  return result;
 }
 
 function stripBlock(block: Record<string, unknown>): Record<string, unknown> {
@@ -111,11 +150,25 @@ function stripBlock(block: Record<string, unknown>): Record<string, unknown> {
     } else if (itemKeys[String(block.type)]?.[key] && Array.isArray(entry)) {
       const allowedItemKeys = itemKeys[String(block.type)]?.[key] ?? new Set();
       result[key] = entry.map((item) => (isRecord(item) ? stripObject(item, allowedItemKeys) : item));
+    } else if (richTextBlockKeys[String(block.type)]?.has(key)) {
+      result[key] = stripUnknownKeys(entry);
+    } else if (block.type === "table" && key === "rows") {
+      result[key] = stripTableRows(entry);
     } else {
       result[key] = entry;
     }
   }
   return result;
+}
+
+function stripTableRows(value: unknown): unknown {
+  if (!Array.isArray(value)) return value;
+  return value.map((row) => {
+    if (!isRecord(row)) return row;
+    const result: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(row)) result[key] = stripUnknownKeys(entry);
+    return result;
+  });
 }
 
 function normalizePassthroughDoc(value: unknown): unknown {

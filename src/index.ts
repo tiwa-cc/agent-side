@@ -1,5 +1,5 @@
 export { normalizeDoc } from "./ast/normalize.js";
-export type { Block, DocIR } from "./ast/types.js";
+export type { Block, DocIR, InlineNode, RichText, TableCell } from "./ast/types.js";
 export { loadConfig } from "./config/loadConfig.js";
 export { loadTheme } from "./config/loadTheme.js";
 export type { DocirConfig } from "./config/configSchema.js";
@@ -12,3 +12,6 @@ export { renderBootstrapHtml, renderProject, validateDoc, validateProject } from
 export type { LoadedProject, LoadProjectOptions, RenderProjectOptions, RenderProjectResult } from "./core/index.js";
 export { renderMarkdownDocument } from "./renderer/markdown/index.js";
 export { renderPlainCss, renderPlainDocument } from "./renderer/plain/index.js";
+export { inlineNodeSchema, richTextSchema, tableCellSchema } from "./schema/inlineSchema.js";
+export { migrateMarkdown, migrateMarkdownFile } from "./migration/markdown.js";
+export type { MarkdownMigrationOptions, MarkdownMigrationResult, MarkdownMigrationWarning, MigrateMarkdownFileOptions } from "./migration/markdown.js";

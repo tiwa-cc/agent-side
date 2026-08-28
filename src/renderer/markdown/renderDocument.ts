@@ -1,5 +1,6 @@
 import type { Block, DocIR, TableBlock } from "../../ast/types.js";
 import { asArray, objectRecord, safeHref, stringify } from "../shared.js";
+import { renderInlineMarkdown } from "../inline.js";
 
 export function renderMarkdownDocument(doc: DocIR): string {
   return [`# ${escapeInline(doc.title)}`, doc.description ? escapeText(doc.description) : "", ...doc.blocks.map((block) => renderMarkdownBlock(block, 2))]
@@ -14,29 +15,29 @@ function renderMarkdownBlock(block: Block, level: number): string {
     case "section":
       return [heading(block.title, level), ...block.blocks.map((child) => renderMarkdownBlock(child, next(level)))].filter(Boolean).join("\n\n");
     case "paragraph":
-      return [heading(block.title, level), escapeText(block.text)].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), renderInlineMarkdown(block.text)].filter(Boolean).join("\n\n");
     case "summary":
     case "issue":
     case "quote":
-      return [heading(block.title, level), escapeText(String(block.body ?? ""))].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), renderInlineMarkdown(block.body ?? "")].filter(Boolean).join("\n\n");
     case "notice":
       return [heading(block.title, level), quoteText(block.text ?? block.body ?? "")].filter(Boolean).join("\n\n");
     case "decision":
-      return [heading(block.title, level), `**Decision:** ${escapeText(block.decision)}`, block.rationale ? `**Rationale:** ${escapeText(block.rationale)}` : ""].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), `**Decision:** ${renderInlineMarkdown(block.decision)}`, block.rationale ? `**Rationale:** ${renderInlineMarkdown(block.rationale)}` : ""].filter(Boolean).join("\n\n");
     case "risk":
-      return [heading(block.title, level), `**Risk:** ${escapeText(block.risk)}`, block.mitigation ? `**Mitigation:** ${escapeText(block.mitigation)}` : ""].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), `**Risk:** ${renderInlineMarkdown(block.risk)}`, block.mitigation ? `**Mitigation:** ${renderInlineMarkdown(block.mitigation)}` : ""].filter(Boolean).join("\n\n");
     case "list":
-      return [heading(block.title, level), block.items.map((item, index) => `${block.ordered ? `${index + 1}.` : "-"} ${escapeText(item)}`).join("\n")].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), block.items.map((item, index) => `${block.ordered ? `${index + 1}.` : "-"} ${renderInlineMarkdown(item)}`).join("\n")].filter(Boolean).join("\n\n");
     case "points":
     case "constraint":
     case "assumption":
-      return [heading(block.title, level), asArray(block.items).map((item) => `- ${escapeText(stringify(item))}`).join("\n")].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), asArray(block.items).map((item) => `- ${renderInlineMarkdown(item)}`).join("\n")].filter(Boolean).join("\n\n");
     case "table":
       return renderTable(block, level);
     case "cards":
-      return [heading(block.title, level), block.items.map((item) => [heading(item.title, 3), item.body ?? item.text ? escapeText(item.body ?? item.text ?? "") : "", markdownLink("Open", item.href)].filter(Boolean).join("\n\n")).join("\n\n")].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), block.items.map((item) => [heading(item.title, 3), item.body ?? item.text ? renderInlineMarkdown(item.body ?? item.text ?? "") : "", markdownLink("Open", item.href)].filter(Boolean).join("\n\n")).join("\n\n")].filter(Boolean).join("\n\n");
     case "compare":
-      return [heading(block.title, level), (block.options ?? block.items ?? []).map((item) => Object.entries(item).map(([key, value]) => `- **${escapeInline(key)}:** ${escapeText(stringify(value))}`).join("\n")).join("\n\n")].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), (block.options ?? block.items ?? []).map((item) => Object.entries(item).map(([key, value]) => `- **${escapeInline(key)}:** ${renderInlineMarkdown(value)}`).join("\n")).join("\n\n")].filter(Boolean).join("\n\n");
     case "code":
       return [heading(block.title, level), fenced(block.language ?? "", block.code)].filter(Boolean).join("\n\n");
     case "command":
@@ -46,13 +47,13 @@ function renderMarkdownBlock(block: Block, level: number): string {
     case "mermaid":
       return [heading(block.title, level), fenced("mermaid", block.diagram)].filter(Boolean).join("\n\n");
     case "keyValue":
-      return [heading(block.title, level), asArray(block.items).map((item) => objectRecord(item)).map((item) => `- **${escapeInline(stringify(item.key))}:** ${escapeText(stringify(item.value))}`).join("\n")].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), asArray(block.items).map((item) => objectRecord(item)).map((item) => `- **${escapeInline(stringify(item.key))}:** ${renderInlineMarkdown(item.value)}`).join("\n")].filter(Boolean).join("\n\n");
     case "openQuestion":
-      return [heading(block.title, level), `**Question:** ${escapeText(String(block.question ?? ""))}`, block.context ? `**Context:** ${escapeText(String(block.context))}` : ""].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), `**Question:** ${renderInlineMarkdown(block.question ?? "")}`, block.context ? `**Context:** ${renderInlineMarkdown(block.context)}` : ""].filter(Boolean).join("\n\n");
     case "todo":
-      return [heading(block.title, level), asArray(block.items).map((item) => objectRecord(item)).map((item) => `- ${escapeText(stringify(item.title))}${item.status ? ` (${escapeText(stringify(item.status))})` : ""}`).join("\n")].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), asArray(block.items).map((item) => objectRecord(item)).map((item) => `- ${renderInlineMarkdown(item.title)}${item.status ? ` (${escapeText(stringify(item.status))})` : ""}`).join("\n")].filter(Boolean).join("\n\n");
     case "checklist":
-      return [heading(block.title, level), asArray(block.items).map((item) => objectRecord(item)).map((item) => `- [${item.checked ? "x" : " "}] ${escapeText(stringify(item.label))}`).join("\n")].filter(Boolean).join("\n\n");
+      return [heading(block.title, level), asArray(block.items).map((item) => objectRecord(item)).map((item) => `- [${item.checked ? "x" : " "}] ${renderInlineMarkdown(item.label)}`).join("\n")].filter(Boolean).join("\n\n");
     case "reference":
       return [heading(block.title, level), asArray(block.items).map((item) => objectRecord(item)).map((item) => {
         const link = markdownLink(stringify(item.label), stringify(item.path));
@@ -70,7 +71,7 @@ function renderTable(block: TableBlock, level: number): string {
   const separator = `| ${block.columns.map(() => "---").join(" | ")} |`;
   const rows = block.rows.map((row) => {
     const record = Array.isArray(row) ? {} : row;
-    return `| ${block.columns.map((column) => escapeTableCell(String(record[column.key] ?? ""))).join(" | ")} |`;
+    return `| ${block.columns.map((column) => escapeTableCell(record[column.key] ?? "")).join(" | ")} |`;
   });
   return [heading(block.title, level), [header, separator, ...rows].join("\n")].filter(Boolean).join("\n\n");
 }
@@ -121,12 +122,12 @@ function escapeLinkDestination(value: string): string {
     .replace(/[\u0000-\u001F\u007F\s]/g, (char) => encodeURIComponent(char));
 }
 
-function escapeTableCell(value: string): string {
-  return escapeInline(value).replace(/\r?\n/g, "<br>");
+function escapeTableCell(value: unknown): string {
+  return renderInlineMarkdown(value).replace(/\r?\n/g, " ");
 }
 
-function quoteText(value: string): string {
-  return escapeText(value)
+function quoteText(value: unknown): string {
+  return renderInlineMarkdown(value)
     .split(/\r?\n/)
     .map((line) => `> ${line}`)
     .join("\n");
