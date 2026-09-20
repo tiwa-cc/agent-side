@@ -98,6 +98,32 @@ export interface CodeBlock extends BaseBlock {
   code: string;
 }
 
+export type DiffMark = "added" | "removed";
+
+export interface DiffSegment {
+  text: string;
+  mark?: DiffMark;
+}
+
+export interface DiffSide {
+  line: number;
+  text?: string;
+  segments?: DiffSegment[];
+}
+
+export interface DiffLine {
+  left?: DiffSide;
+  right?: DiffSide;
+}
+
+export interface DiffBlock extends BaseBlock {
+  type: "diff";
+  language?: string;
+  left_label?: string;
+  right_label?: string;
+  lines: Array<string | DiffLine>;
+}
+
 export interface MermaidBlock extends BaseBlock {
   type: "mermaid";
   diagram: string;
@@ -134,5 +160,6 @@ export type Block =
   | CardsBlock
   | TableBlock
   | CodeBlock
+  | DiffBlock
   | MermaidBlock
   | GenericBlock;

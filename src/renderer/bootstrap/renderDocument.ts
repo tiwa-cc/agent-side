@@ -91,7 +91,20 @@ export function renderBootstrapCss(context: RenderContext): string {
     a { color: var(--docir-accent); }
     pre { padding: 1rem; background: #212529; color: #f8f9fa; border-radius: .375rem; overflow-x: auto; }
     .mermaid-source { background: #fff; color: #212529; border: 1px solid #dee2e6; }
-    .mermaid-output svg { max-width: 100%; height: auto; }`;
+    .mermaid-output svg { max-width: 100%; height: auto; }
+    .doc-diff-scroll { overflow-x: auto; border: 1px solid #dee2e6; border-radius: .375rem; }
+    .doc-diff-table { width: 100%; min-width: 720px; font: .875rem/1.5 var(--bs-font-monospace); margin: 0; }
+    .doc-diff-table th { background: #f8f9fa; }
+    .doc-diff-line { width: 1%; min-width: 3.5rem; color: #6c757d; text-align: right; user-select: none; }
+    .doc-diff-content { width: 49%; white-space: pre; }
+    .doc-diff-content code { white-space: pre; color: inherit; }
+    .doc-diff-meta { background: #f8f9fa; color: #6c757d; }
+    .doc-diff-removed > :nth-child(-n+2) { background: #f8d7da; }
+    .doc-diff-added > :nth-child(n+3) { background: #d1e7dd; }
+    .doc-diff-changed > :nth-child(-n+2) { background: #f8d7da; }
+    .doc-diff-changed > :nth-child(n+3) { background: #d1e7dd; }
+    .doc-diff-inline-removed { background: #ea868f99; color: inherit; }
+    .doc-diff-inline-added { background: #75b79899; color: inherit; }`;
 }
 
 function shellClassForTheme(context: RenderContext): string {

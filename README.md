@@ -516,6 +516,7 @@ Currently implemented block types include:
 * `quote`
 * `reference`
 * `include`
+* `diff`
 
 Planned or not fully implemented yet:
 
@@ -524,11 +525,52 @@ Planned or not fully implemented yet:
 * `steps`
 * `definition`
 * `glossary`
-* `diff`
 * `figure`
 * `linkList`
 
 The first implementation does not need to support all of them completely, but the architecture should allow them to be added cleanly.
+
+---
+
+## Diff Blocks
+
+`diff` renders a side-by-side review view in HTML. It does not calculate a diff: an agent can paste the output of a normal unified-diff command, or write selected rows explicitly when it needs exact inline highlighting. The two forms can be mixed in one `lines` list.
+
+```yaml
+type: diff
+title: Configuration change
+left_label: Before       # optional; overrides a raw --- header
+right_label: After       # optional; overrides a raw +++ header
+language: typescript     # optional metadata for HTML output
+lines:
+  - "diff --git a/config.ts b/config.ts"
+  - "--- a/config.ts"
+  - "+++ b/config.ts"
+  - "@@ -1,3 +1,3 @@"
+  - " const stable = true;"
+  - left:
+      line: 2            # one-based source line number
+      segments:
+        - text: "const "
+        - text: oldName
+          mark: removed
+        - text: " = value;"
+    right:
+      line: 2
+      segments:
+        - text: "const "
+        - text: newName
+          mark: added
+        - text: " = value;"
+  - left:
+      line: 3
+      text: "const deleted = true;"
+  - right:
+      line: 3
+      text: "const added = true;"
+```
+
+Raw lines follow unified-diff conventions: a leading space is context, `-` is removed, and `+` is added. Consecutive removed and added lines are paired in display order; extra lines stay on their own side. Raw lines retain no word-level difference information, so use `segments` only for lines that need a deliberate inline emphasis. In Markdown output, every diff block is emitted as a standard `diff` fence; explicit rows become ordinary unified-diff lines.
 
 ---
 

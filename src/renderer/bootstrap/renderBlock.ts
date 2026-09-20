@@ -1,6 +1,7 @@
 import type { Block, TableBlock } from "../../ast/types.js";
 import { classNames, escapeHtml as escape } from "../../utils/html.js";
 import { asArray, labelize, objectRecord, safeHref, stringify } from "../shared.js";
+import { renderDiffHtml } from "../diff.js";
 import { renderInlineHtml } from "../inline.js";
 
 interface BlockRenderState {
@@ -54,6 +55,8 @@ export function renderBlock(block: Block, state: BlockRenderState): string {
       return renderTable(block, state);
     case "code":
       return `${renderTitle(block.title, state.headingLevel)}<pre><code class="language-${escape(block.language ?? "text")}">${escape(block.code)}</code></pre>`;
+    case "diff":
+      return `<section>${renderTitle(block.title, state.headingLevel)}${renderDiffHtml(block)}</section>`;
     case "mermaid":
       return `${renderTitle(block.title, state.headingLevel)}<div class="mermaid-block"><pre class="mermaid-source">${escape(block.diagram)}</pre><div class="mermaid-output" aria-hidden="true"></div></div>`;
     case "include":

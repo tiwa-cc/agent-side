@@ -3,6 +3,7 @@ import { escapeHtml as escape } from "../../utils/html.js";
 import type { RenderContext } from "../types.js";
 import { asArray, labelize, objectRecord, safeHref, stringify } from "../shared.js";
 import { renderInlineHtml } from "../inline.js";
+import { renderDiffHtml } from "../diff.js";
 
 export function renderPlainDocument(doc: DocIR, context: RenderContext): string {
   const lang = doc.lang ?? context.config.site.lang ?? "en";
@@ -43,7 +44,19 @@ export function renderPlainCss(): string {
     pre { padding: 1rem; background: #f6f8fa; overflow-x: auto; }
     code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
     table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #d0d7de; padding: .5rem; text-align: left; vertical-align: top; }`;
+    th, td { border: 1px solid #d0d7de; padding: .5rem; text-align: left; vertical-align: top; }
+    .doc-diff-scroll { overflow-x: auto; border: 1px solid #d0d7de; }
+    .doc-diff-table { width: 100%; min-width: 720px; font: .875rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .doc-diff-line { width: 1%; min-width: 3.5rem; color: #57606a; text-align: right; user-select: none; }
+    .doc-diff-content { width: 49%; white-space: pre; }
+    .doc-diff-content code { white-space: pre; }
+    .doc-diff-meta { background: #f6f8fa; color: #57606a; }
+    .doc-diff-removed > :nth-child(-n+2) { background: #ffebe9; }
+    .doc-diff-added > :nth-child(n+3) { background: #dafbe1; }
+    .doc-diff-changed > :nth-child(-n+2) { background: #ffebe9; }
+    .doc-diff-changed > :nth-child(n+3) { background: #dafbe1; }
+    .doc-diff-inline-removed { background: #ff818266; color: inherit; }
+    .doc-diff-inline-added { background: #4ac26b66; color: inherit; }`;
 }
 
 function renderPlainBlock(block: Block, level: number): string {
@@ -69,6 +82,8 @@ function renderPlainBlock(block: Block, level: number): string {
     case "code":
     case "command":
       return `${heading(block.title, level)}<pre><code>${escape(String(block.type === "code" ? block.code : block.command ?? ""))}</code></pre>`;
+    case "diff":
+      return `<section>${heading(block.title, level)}${renderDiffHtml(block)}</section>`;
     case "output":
       return `${heading(block.title, level)}<pre><code>${escape(String(block.body ?? ""))}</code></pre>`;
     case "mermaid":

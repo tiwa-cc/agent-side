@@ -1,6 +1,7 @@
 import type { Block, DocIR, TableBlock } from "../../ast/types.js";
 import { asArray, objectRecord, safeHref, stringify } from "../shared.js";
 import { renderInlineMarkdown } from "../inline.js";
+import { renderDiffMarkdown } from "../diff.js";
 
 export function renderMarkdownDocument(doc: DocIR): string {
   return [`# ${escapeInline(doc.title)}`, doc.description ? escapeText(doc.description) : "", ...doc.blocks.map((block) => renderMarkdownBlock(block, 2))]
@@ -40,6 +41,8 @@ function renderMarkdownBlock(block: Block, level: number): string {
       return [heading(block.title, level), (block.options ?? block.items ?? []).map((item) => Object.entries(item).map(([key, value]) => `- **${escapeInline(key)}:** ${escapeText(stringify(value))}`).join("\n")).join("\n\n")].filter(Boolean).join("\n\n");
     case "code":
       return [heading(block.title, level), fenced(block.language ?? "", block.code)].filter(Boolean).join("\n\n");
+    case "diff":
+      return [heading(block.title, level), renderDiffMarkdown(block)].filter(Boolean).join("\n\n");
     case "command":
       return [heading(block.title, level), fenced(String(block.shell ?? "bash"), String(block.command ?? ""))].filter(Boolean).join("\n\n");
     case "output":

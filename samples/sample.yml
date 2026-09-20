@@ -86,6 +86,43 @@ page:
           rationale: HTML should be regenerated from structured meaning so that agents do not directly mutate fragile presentation output.
 
     - type: section
+      title: Diff Review
+      blocks:
+        - type: diff
+          title: Configuration Change
+          left_label: Before
+          right_label: After
+          language: typescript
+          lines:
+            - "diff --git a/config.ts b/config.ts"
+            - "--- a/config.ts"
+            - "+++ b/config.ts"
+            - "@@ -1,5 +1,5 @@"
+            - " const stable = true;"
+            - left:
+                line: 2
+                segments:
+                  - text: "const environment = "
+                  - text: staging
+                    mark: removed
+              right:
+                line: 2
+                segments:
+                  - text: "const environment = "
+                  - text: production
+                    mark: added
+            - left:
+                line: 3
+                text: "const legacyMode = true;"
+            - right:
+                line: 3
+                text: "const auditMode = true;"
+            - " export { environment };"
+
+        - type: paragraph
+          text: Raw unified-diff lines and explicit rows can be mixed. Use explicit segments only where a review needs deliberate inline emphasis.
+
+    - type: section
       title: Renderer Comparison
       blocks:
         - type: table

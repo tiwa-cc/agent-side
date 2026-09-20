@@ -9,6 +9,7 @@ import { parseOutputMode } from "../src/cli/outputMode.js";
 import { renderBlock } from "../src/renderer/bootstrap/renderBlock.js";
 import { renderDocument } from "../src/renderer/bootstrap/renderDocument.js";
 import { renderMarkdownDocument } from "../src/renderer/markdown/renderDocument.js";
+import { renderPlainDocument } from "../src/renderer/plain/renderDocument.js";
 
 const repoRoot = process.cwd();
 const fixturesRoot = resolve(repoRoot, "tests/fixtures");
@@ -293,6 +294,181 @@ describe("renderer safety", () => {
 
   it("rejects invalid CLI output modes", () => {
     expect(() => parseOutputMode("bundel")).toThrow(/Invalid output mode/);
+  });
+});
+
+describe("diff blocks", () => {
+  it("renders raw and explicit diff lines as one side-by-side view", async () => {
+    const { config, theme } = await loadFixture("minimal");
+    const doc: DocIR = {
+      title: "Diff",
+      blocks: [
+        {
+          type: "diff",
+          title: "Settings",
+          language: "ts",
+          left_label: "Expected",
+          right_label: "Actual",
+          lines: [
+            "diff --git a/settings.ts b/settings.ts",
+            "--- a/settings.ts",
+            "+++ b/settings.ts",
+            "@@ -1,4 +1,4 @@",
+            " const keep = true;",
+            {
+              left: {
+                line: 2,
+                segments: [{ text: "const " }, { text: "oldName", mark: "removed" }, { text: " = value;" }],
+              },
+              right: {
+                line: 2,
+                segments: [{ text: "const " }, { text: "newName", mark: "added" }, { text: " = value;" }],
+              },
+            },
+            { left: { line: 3, text: "const removedOnly = true;" } },
+            { right: { line: 3, text: "const addedOnly = true;" } },
+            {
+              left: { line: 4, text: "const same = true;" },
+              right: { line: 4, text: "const same = true;" },
+            },
+            "-const removed = true;",
+            "+const added = true;",
+            " export { value };",
+          ],
+        },
+      ],
+    };
+
+    const bootstrap = renderDocument(doc, { config, theme });
+    const plain = renderPlainDocument(doc, { config, theme, outputMode: "single" });
+    const markdown = renderMarkdownDocument(doc);
+
+    expect(bootstrap).toContain('<th colspan="2">Expected</th>');
+    expect(bootstrap).toContain('<th colspan="2">Actual</th>');
+    expect(bootstrap).toContain("doc-diff-inline-removed");
+    expect(bootstrap).toContain("doc-diff-inline-added");
+    expect(bootstrap).toContain("doc-diff-removed");
+    expect(bootstrap).toContain("doc-diff-added");
+    expect(bootstrap).toContain("doc-diff-context");
+    expect(bootstrap).toContain('<td class="doc-diff-line">3</td>');
+    expect(plain).toContain("doc-diff-table");
+    expect(plain).toContain("const keep = true;");
+    expect(markdown).toContain("## Settings");
+    expect(markdown).toContain("```diff");
+    expect(markdown).toContain("--- Expected");
+    expect(markdown).toContain("+++ Actual");
+    expect(markdown).toContain("-const oldName = value;");
+    expect(markdown).toContain("+const newName = value;");
+    expect(markdown).toContain("-const removedOnly = true;");
+    expect(markdown).toContain("+const addedOnly = true;");
+    expect(markdown).toContain(" const same = true;");
+  });
+
+  it("uses raw headers as fallback labels and preserves unbalanced raw change runs", async () => {
+    const { config, theme } = await loadFixture("minimal");
+    const doc: DocIR = {
+      title: "Raw diff",
+      blocks: [
+        {
+          type: "diff",
+          lines: [
+            "diff --git a/a.ts b/a.ts",
+            "--- a/a.ts",
+            "+++ b/a.ts",
+            "@@ -10,3 +10,2 @@",
+            "-first removed",
+            "-second removed",
+            "+replacement",
+            "\\ No newline at end of file",
+          ],
+        },
+      ],
+    };
+
+    const html = renderDocument(doc, { config, theme });
+    const markdown = renderMarkdownDocument(doc);
+
+    expect(html).toContain('<th colspan="2">a/a.ts</th>');
+    expect(html).toContain('<th colspan="2">b/a.ts</th>');
+    expect(html).toContain('<td class="doc-diff-line">10</td>');
+    expect(html).toContain('<td class="doc-diff-line">11</td>');
+    expect(html).toContain("doc-diff-meta");
+    expect(markdown).toContain("-second removed");
+    expect(markdown).toContain("+replacement");
+  });
+
+  it("keeps Markdown file headers ordered when it fills in a missing side", () => {
+    const markdown = renderMarkdownDocument({
+      title: "Partial header",
+      blocks: [
+        {
+          type: "diff",
+          left_label: "Expected",
+          lines: ["+++ b/settings.ts", "@@ -1 +1 @@", "-old", "+new"],
+        },
+      ],
+    });
+
+    expect(markdown).toContain("--- Expected\n+++ b/settings.ts\n@@");
+  });
+
+  it("escapes untrusted diff headers, raw lines, and explicit segments", async () => {
+    const { config, theme } = await loadFixture("minimal");
+    const html = renderDocument(
+      {
+        title: "Unsafe diff",
+        blocks: [
+          {
+            type: "diff",
+            left_label: '<img src=x onerror="alert(1)">',
+            lines: [
+              "--- a/<img>",
+              "+++ b/<script>",
+              "@@ -1 +1 @@",
+              "-<img src=x onerror=alert(1)>",
+              {
+                right: { line: 1, segments: [{ text: '<script>alert(1)</script>', mark: "added" }] },
+              },
+            ],
+          },
+        ],
+      },
+      { config, theme },
+    );
+
+    expect(html).not.toContain("<img src=x");
+    expect(html).not.toContain("<script>alert(1)</script>");
+    expect(html).toContain("&lt;img src=x");
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+  });
+
+  it("rejects empty diff rows and ambiguous explicit sides", async () => {
+    const { config } = await loadFixture("minimal");
+
+    expect(() => validateDoc({ title: "Invalid", blocks: [{ type: "diff", lines: [{}] }] }, config)).toThrow(/Diff line must have a left or right side/);
+    expect(() =>
+      validateDoc(
+        {
+          title: "Invalid",
+          blocks: [
+            {
+              type: "diff",
+              lines: [{ left: { line: 1, text: "text", segments: [{ text: "text" }] } }],
+            },
+          ],
+        },
+        config,
+      ),
+    ).toThrow(/Diff side must have exactly one of text or segments/);
+    expect(() =>
+      validateDoc(
+        {
+          title: "Invalid",
+          blocks: [{ type: "diff", lines: [{ right: { line: 0, text: "not a line number" } }] }],
+        },
+        config,
+      ),
+    ).toThrow(/Number must be greater than 0/);
   });
 });
 

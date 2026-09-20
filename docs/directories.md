@@ -56,6 +56,7 @@
       - validateDoc.ts
     - renderer/
       - shared.ts
+      - diff.ts
       - inline.ts
       - types.ts
       - bootstrap/

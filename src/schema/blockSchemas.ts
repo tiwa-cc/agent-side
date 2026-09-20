@@ -14,6 +14,24 @@ const forbiddenPresentationKeys = ["class", "style", "margin", "padding", "font-
 
 const base = z.object(semanticHints).strict();
 
+const diffSegmentSchema = z.object({ text: z.string(), mark: z.enum(["added", "removed"]).optional() }).strict();
+
+const diffSideSchema = z
+  .object({ line: z.number().int().positive(), text: z.string().optional(), segments: z.array(diffSegmentSchema).min(1).optional() })
+  .strict()
+  .superRefine((side, ctx) => {
+    if ((side.text === undefined) === (side.segments === undefined)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Diff side must have exactly one of text or segments" });
+    }
+  });
+
+const diffLineSchema = z
+  .object({ left: diffSideSchema.optional(), right: diffSideSchema.optional() })
+  .strict()
+  .superRefine((line, ctx) => {
+    if (!line.left && !line.right) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Diff line must have a left or right side" });
+  });
+
 export const blockSchema: z.ZodTypeAny = z.lazy(() =>
   z
     .discriminatedUnion("type", [
@@ -37,6 +55,13 @@ export const blockSchema: z.ZodTypeAny = z.lazy(() =>
         rows: z.array(z.union([z.record(tableCellSchema), z.array(z.unknown())])),
       }),
       base.extend({ type: z.literal("code"), language: z.string().optional(), code: z.string() }),
+      base.extend({
+        type: z.literal("diff"),
+        language: z.string().optional(),
+        left_label: z.string().optional(),
+        right_label: z.string().optional(),
+        lines: z.array(z.union([z.string(), diffLineSchema])).min(1),
+      }),
       base.extend({ type: z.literal("mermaid"), diagram: z.string() }),
       base.extend({ type: z.literal("keyValue"), items: z.array(z.object({ key: z.string(), value: z.string() }).strict()) }),
       base.extend({ type: z.literal("constraint"), items: z.array(richTextSchema) }),
