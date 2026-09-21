@@ -1,6 +1,6 @@
 {
   "name": "agent-side",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "AI-safe document rendering layer where agents write structured meaning and renderers generate human-readable output.",
   "license": "MIT",
   "type": "module",
