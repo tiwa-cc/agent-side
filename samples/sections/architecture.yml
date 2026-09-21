@@ -1,0 +1,41 @@
+blocks:
+  - type: mermaid
+    title: Document Generation Pipeline
+    diagram: |
+      flowchart TD
+        A[Agent or Human] --> B[DocIR YAML]
+        B --> C[Loader]
+        C --> D[Include Resolver]
+        D --> E[Validator]
+        E --> F[Normalizer]
+        F --> G[Renderer]
+        G --> H[Readable HTML]
+        H --> I[Browser Review]
+
+  - type: cards
+    title: Main Components
+    layout: 3col
+    items:
+      - title: Loader
+        body: Reads YAML files, resolves include blocks, and prevents invalid paths or circular references.
+        badge: input
+      - title: Validator
+        body: Checks block types, required fields, forbidden presentation keys, and table row shape.
+        badge: safety
+      - title: Normalizer
+        body: Converts validated DocIR into a stable internal AST with defaults applied.
+        badge: structure
+      - title: Renderer
+        body: Converts the normalized AST into readable HTML using theme tokens and renderer rules.
+        badge: output
+      - title: Theme
+        body: Stores visual decisions outside DocIR so agents cannot freely modify presentation details.
+        badge: external
+      - title: Preview
+        body: Serves generated output locally and helps humans review changes in a browser.
+        badge: review
+
+  - type: decision
+    title: Source of Truth
+    decision: YAML DocIR is the source of truth.
+    rationale: HTML should be regenerated from structured meaning so that agents do not directly mutate fragile presentation output.

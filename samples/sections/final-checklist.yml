@@ -1,0 +1,40 @@
+blocks:
+  - type: checklist
+    title: Renderer Review Checklist
+    items:
+      - label: HTML language is configurable and not hard-coded.
+        checked: false
+      - label: Heading hierarchy is semantically correct.
+        checked: false
+      - label: Class output has no empty tokens or trailing spaces.
+        checked: false
+      - label: Tables use key-value rows.
+        checked: true
+      - label: Mermaid diagrams have fallback behavior.
+        checked: false
+      - label: Diff reviews preserve side-by-side source context.
+        checked: true
+      - label: Forbidden presentation keys are rejected.
+        checked: true
+      - label: Bootstrap details do not leak into DocIR.
+        checked: true
+      - label: Include cycles are detected.
+        checked: false
+      - label: Snapshot tests cover complex nested documents.
+        checked: false
+
+  - type: quote
+    title: Working Definition
+    body: Agents should write structured meaning. Renderers should create human-readable output. Humans should review the result in a browser.
+
+  - type: reference
+    title: Related Files
+    items:
+      - label: Project goal
+        path: docs/goal.md
+      - label: Entry document
+        path: docs/index.yml
+      - label: Default theme
+        path: themes/default.yml
+      - label: Renderer implementation
+        path: src/renderer/bootstrap/

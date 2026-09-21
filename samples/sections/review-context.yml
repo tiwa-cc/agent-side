@@ -1,0 +1,5 @@
+blocks:
+  - type: notice
+    tone: info
+    title: Review Context
+    body: This implementation review uses agent-side itself as the subject. Each block demonstrates how structured content can be rendered for a human reviewer.

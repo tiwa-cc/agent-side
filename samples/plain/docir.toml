@@ -12,7 +12,7 @@ theme = "default"
 mode = "cdn"
 
 [include]
-base_dir = "docs"
+base_dir = ".."
 allow_parent = false
 
 [validation]

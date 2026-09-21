@@ -1,0 +1,44 @@
+blocks:
+  - type: notice
+    tone: warning
+    title: Presentation Keys Are Forbidden
+    body: DocIR must reject fields such as class, style, margin, padding, font-size, and color. These belong to the renderer or theme layer.
+
+  - type: table
+    title: Forbidden Keys
+    columns:
+      - key: key
+        label: Key
+      - key: reason
+        label: Reason
+      - key: replacement
+        label: Preferred Alternative
+    rows:
+      - key: class
+        reason: Leaks renderer-specific implementation details into DocIR.
+        replacement: Use semantic block type, tone, layout, or theme tokens.
+      - key: style
+        reason: Allows arbitrary presentation changes and makes output unstable.
+        replacement: Use external theme configuration.
+      - key: margin
+        reason: Introduces pixel-level layout control into a semantic document.
+        replacement: Use renderer spacing tokens.
+      - key: padding
+        reason: Couples document meaning to visual layout.
+        replacement: Use theme-defined block spacing.
+      - key: color
+        reason: Allows agents to bypass tone and theme rules.
+        replacement: Use tone such as info, warning, danger, success, or neutral.
+
+  - type: risk
+    title: Validator Drift
+    risk: The schema may become too permissive as more blocks are added.
+    impact: high
+    mitigation: Keep strict mode enabled by default and add snapshot tests for every new block type.
+
+  - type: constraint
+    title: No Two-Dimensional Table Rows
+    items:
+      - Table rows must be key-value objects.
+      - Position-dependent array rows are not allowed.
+      - Columns define display order, but row values must be addressed by keys.

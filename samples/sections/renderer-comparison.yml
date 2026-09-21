@@ -1,0 +1,65 @@
+blocks:
+  - type: table
+    title: Renderer Options
+    columns:
+      - key: renderer
+        label: Renderer
+        kind: text
+        required: true
+      - key: strength
+        label: Strength
+        kind: text
+      - key: concern
+        label: Concern
+        kind: text
+      - key: priority
+        label: Priority
+        kind: badge
+        values:
+          - high
+          - medium
+          - low
+    rows:
+      - renderer: Bootstrap HTML
+        strength: Many ready-made components are available, making early output readable with little custom CSS.
+        concern: The default appearance may feel Bootstrap-like unless themes are improved.
+        priority: high
+      - renderer: Tailwind HTML
+        strength: Flexible visual design and suitable for custom themes.
+        concern: Requires more renderer-side design rules because Tailwind is utility-first.
+        priority: medium
+      - renderer: Plain HTML
+        strength: Minimal dependency and simple output.
+        concern: Readability depends heavily on custom CSS.
+        priority: medium
+      - renderer: Markdown
+        strength: Useful for exporting back to documentation systems.
+        concern: Some semantic blocks may lose structure when converted to Markdown.
+        priority: low
+      - renderer: PDF
+        strength: Useful for reports, proposals, and archival documents.
+        concern: Mermaid and layout handling may require pre-rendering or a browser-based export path.
+        priority: low
+
+  - type: compare
+    title: Bootstrap vs Tailwind for the First Renderer
+    items:
+      - name: Bootstrap
+        status: recommended
+        summary: Best first target because common document components can be mapped quickly.
+        pros:
+          - Alerts, cards, tables, accordions, and grids are already available.
+          - The generated HTML becomes readable early.
+          - Snapshot tests can focus on semantic mapping instead of design details.
+        cons:
+          - The appearance may look generic.
+          - Advanced customization should be moved into themes.
+      - name: Tailwind
+        status: later
+        summary: Useful after renderer contracts and theme tokens are more stable.
+        pros:
+          - Good for custom design systems.
+          - Works well with token-based rendering.
+        cons:
+          - Requires more mapping rules.
+          - It is easier for presentation concerns to leak into DocIR if boundaries are weak.

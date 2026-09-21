@@ -1,0 +1,29 @@
+blocks:
+  - type: summary
+    title: Summary
+    body: agent-side is an AI-safe document rendering layer. Agents edit structured YAML DocIR, while renderers generate human-readable HTML for review.
+
+  - type: keyValue
+    title: Project Facts
+    items:
+      - key: Project name
+        value: agent-side
+      - key: Primary editing format
+        value: YAML DocIR
+      - key: Configuration format
+        value: TOML
+      - key: First renderer
+        value: Bootstrap HTML
+      - key: Human review target
+        value: Browser-rendered HTML
+      - key: Main design goal
+        value: Prevent AI agents from breaking document structure and presentation
+
+  - type: points
+    title: Core Principles
+    items:
+      - Agents write meaning, not presentation.
+      - Generated HTML is an artifact, not the source of truth.
+      - Renderer-specific classes and styles must stay outside DocIR.
+      - Complex documents should be split into YAML files and resolved by the loader.
+      - The renderer should receive a normalized AST, not raw file fragments.

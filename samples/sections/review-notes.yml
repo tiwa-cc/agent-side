@@ -1,0 +1,29 @@
+blocks:
+  - type: assumption
+    title: Assumptions
+    items:
+      - The first implementation is written in TypeScript.
+      - The first renderer outputs Bootstrap HTML.
+      - The primary human review interface is a browser.
+      - YAML remains the editable DocIR format.
+      - TOML remains the project configuration format.
+
+  - type: risk
+    title: Overfitting to Bootstrap
+    risk: If Bootstrap concepts leak into DocIR, future renderers will become harder to implement.
+    impact: medium
+    mitigation: Keep Bootstrap class names inside the Bootstrap renderer and only expose semantic fields in DocIR.
+
+  - type: issue
+    title: Heading Depth Needs Care
+    body: Nested sections and block titles must not all render as h2. The renderer should track depth and generate h2, h3, h4, or lower headings as appropriate.
+
+  - type: openQuestion
+    title: Theme Token Scope
+    question: How much layout control should themes have before they become another CSS abstraction layer?
+    context: The theme system should support readable output without allowing arbitrary presentation mutation by agents.
+
+  - type: decision
+    title: Snapshot Tests
+    decision: Renderer snapshot tests should cover notice, section, mermaid, diff, decision, table, cards, risk, include-resolved documents, and nested heading structures.
+    rationale: Stable snapshots help detect accidental output regressions when block renderers are changed.

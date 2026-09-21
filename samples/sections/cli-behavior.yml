@@ -1,0 +1,49 @@
+blocks:
+  - type: command
+    title: Validate Document
+    shell: bash
+    command: |
+      agent-side validate docs/index.yml
+
+  - type: output
+    title: Expected Validation Output
+    body: |
+      Loaded config: docir.toml
+      Entry: docs/index.yml
+      Includes resolved: 3
+      Blocks validated: 42
+      Result: valid
+
+  - type: command
+    title: Render Document
+    shell: bash
+    command: |
+      agent-side render docs/index.yml --out dist
+
+  - type: output
+    title: Expected Render Output
+    body: |
+      Loaded theme: themes/default.yml
+      Renderer: bootstrap
+      Mermaid mode: cdn
+      Wrote: dist/index.html
+
+  - type: todo
+    title: CLI Implementation Tasks
+    items:
+      - id: cli-init
+        title: Implement agent-side init
+        status: todo
+        priority: medium
+      - id: cli-validate
+        title: Implement agent-side validate
+        status: in_progress
+        priority: high
+      - id: cli-render
+        title: Implement agent-side render
+        status: in_progress
+        priority: high
+      - id: cli-preview
+        title: Implement agent-side preview
+        status: todo
+        priority: medium

@@ -1,0 +1,39 @@
+blocks:
+  - type: summary
+    body: Large documents should be split into smaller YAML files. Include resolution should happen before validation or before final AST normalization, depending on implementation details.
+
+  - type: fileTree
+    title: Recommended Project Structure
+    root: agent-side
+    items:
+      - path: docir.toml
+        description: Project configuration, renderer selection, include policy, validation mode, and theme path.
+      - path: docs/index.yml
+        description: Entry DocIR document.
+      - path: docs/sections/concept.yml
+        description: Included section file.
+      - path: docs/sections/renderer.yml
+        description: Included renderer design section.
+      - path: themes/default.yml
+        description: Default external theme tokens.
+      - path: dist/index.html
+        description: Generated review HTML.
+      - path: src/
+        description: TypeScript source code.
+      - path: tests/
+        description: Fixtures and snapshot tests.
+
+  - type: points
+    title: Include Resolver Requirements
+    items:
+      - Resolve paths relative to the including file.
+      - Reject parent traversal when allow_parent is false.
+      - Detect circular includes.
+      - Report missing files with readable error messages.
+      - Preserve enough source location information for debugging.
+      - Return a tree that the renderer can consume without knowing file boundaries.
+
+  - type: openQuestion
+    title: Include Validation Timing
+    question: Should included files be validated individually before merge, or should the merged document be validated as a whole?
+    context: Individual validation gives better local errors. Whole-document validation makes cross-block rules easier.

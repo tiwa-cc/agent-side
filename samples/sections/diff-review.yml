@@ -1,0 +1,31 @@
+blocks:
+  - type: summary
+    body: An agent can provide a unified diff for a proposed DocIR change. The renderer presents it side by side so a human can review the semantic change before accepting it.
+
+  - type: diff
+    left_label: Current DocIR
+    right_label: Proposed DocIR
+    language: yaml
+    lines:
+      - "diff --git a/docs/release-review.yml b/docs/release-review.yml"
+      - "--- a/docs/release-review.yml"
+      - "+++ b/docs/release-review.yml"
+      - "@@ -8,4 +8,4 @@"
+      - " - type: notice"
+      - "   title: Preview Availability"
+      - left:
+          line: 10
+          segments:
+            - text: "  tone: "
+            - text: warning
+              mark: removed
+        right:
+          line: 10
+          segments:
+            - text: "  tone: "
+            - text: danger
+              mark: added
+      - "   body: Preview assets must be available before release."
+
+  - type: paragraph
+    text: Raw unified-diff lines and explicit rows can be mixed. Use explicit segments only where a review needs deliberate inline emphasis.

@@ -104,6 +104,18 @@
   - samples/
     - README.md
     - sample.yml
+    - sections/
+      - review-context.yml
+      - project-overview.yml
+      - architecture.yml
+      - renderer-comparison.yml
+      - validation-rules.yml
+      - include-and-files.yml
+      - mermaid-handling.yml
+      - diff-review.yml
+      - cli-behavior.yml
+      - review-notes.yml
+      - final-checklist.yml
     - bootstrap/
       - .gitignore
       - docir.toml

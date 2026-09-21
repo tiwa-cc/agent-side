@@ -1,10 +1,10 @@
 # agent-side implementation review
 
-A complex DocIR sample for validating renderer behavior, nested structures, semantic blocks, and AI-safe document editing\.
+An implementation review of agent-side that demonstrates how structured DocIR supports safe authoring, rendering, and human review\.
 
 ## Review Context
 
-> This document is intentionally complex\. It is used to test whether the renderer can produce stable, readable HTML from structured YAML without relying on raw HTML or presentation-specific fields\.
+> This implementation review uses agent-side itself as the subject\. Each block demonstrates how structured content can be rendered for a human reviewer\.
 
 ## Project Overview
 
@@ -77,25 +77,6 @@ Serves generated output locally and helps humans review changes in a browser\.
 **Decision:** YAML DocIR is the source of truth\.
 
 **Rationale:** HTML should be regenerated from structured meaning so that agents do not directly mutate fragile presentation output\.
-
-## Diff Review
-
-### Configuration Change
-
-```diff
-diff --git a/config.ts b/config.ts
---- Before
-+++ After
-@@ -1,5 +1,5 @@
- const stable = true;
--const environment = staging
-+const environment = production
--const legacyMode = true;
-+const auditMode = true;
- export { environment };
-```
-
-Raw unified-diff lines and explicit rows can be mixed\. Use explicit segments only where a review needs deliberate inline emphasis\.
 
 ## Renderer Comparison
 
@@ -227,6 +208,24 @@ flowchart LR
 - **pros:** Suitable for PDF and static archives, Runtime JavaScript is unnecessary
 - **cons:** Build pipeline becomes heavier, Error handling must happen at render time
 
+## Diff Review
+
+An agent can provide a unified diff for a proposed DocIR change\. The renderer presents it side by side so a human can review the semantic change before accepting it\.
+
+```diff
+diff --git a/docs/release-review.yml b/docs/release-review.yml
+--- Current DocIR
++++ Proposed DocIR
+@@ -8,4 +8,4 @@
+ - type: notice
+   title: Preview Availability
+-  tone: warning
++  tone: danger
+   body: Preview assets must be available before release.
+```
+
+Raw unified-diff lines and explicit rows can be mixed\. Use explicit segments only where a review needs deliberate inline emphasis\.
+
 ## CLI Behavior
 
 ### Validate Document
@@ -299,7 +298,7 @@ Nested sections and block titles must not all render as h2\. The renderer should
 
 ### Snapshot Tests
 
-**Decision:** Renderer snapshot tests should be added for notice, section, mermaid, decision, table, cards, risk, include-resolved documents, and nested heading structures\.
+**Decision:** Renderer snapshot tests should cover notice, section, mermaid, diff, decision, table, cards, risk, include-resolved documents, and nested heading structures\.
 
 **Rationale:** Stable snapshots help detect accidental output regressions when block renderers are changed\.
 
@@ -312,6 +311,7 @@ Nested sections and block titles must not all render as h2\. The renderer should
 - [ ] Class output has no empty tokens or trailing spaces\.
 - [x] Tables use key-value rows\.
 - [ ] Mermaid diagrams have fallback behavior\.
+- [x] Diff reviews preserve side-by-side source context\.
 - [x] Forbidden presentation keys are rejected\.
 - [x] Bootstrap details do not leak into DocIR\.
 - [ ] Include cycles are detected\.

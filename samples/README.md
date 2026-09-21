@@ -1,10 +1,12 @@
 # Samples
 
 This directory contains rendered output samples generated from `sample.yml`.
+The root file defines the document outline; chapter content lives in `sections/` and is resolved through include blocks.
 
 ## Files
 
 * [Source DocIR](sample.yml)
+* [Sample sections](sections/)
 * [Default theme](themes/default.yml)
 * [Plain HTML output](plain/dist/index.html)
 * [Plain Markdown output](plain/dist/index.md)

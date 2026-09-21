@@ -19,30 +19,6 @@ blocks:
             merit: Flexible design
             concern: Renderer needs more design rules
 
-      - type: diff
-        title: Rendered Side-by-Side Change
-        left_label: Before
-        right_label: After
-        language: typescript
-        lines:
-          - "diff --git a/settings.ts b/settings.ts"
-          - "--- a/settings.ts"
-          - "+++ b/settings.ts"
-          - "@@ -1,3 +1,3 @@"
-          - " const enabled = true;"
-          - left:
-              line: 2
-              segments:
-                - text: "const mode = "
-                - text: draft
-                  mark: removed
-            right:
-              line: 2
-              segments:
-                - text: "const mode = "
-                - text: review
-                  mark: added
-          - " export { mode };"
       - type: cards
         title: Supported Blocks
         items:

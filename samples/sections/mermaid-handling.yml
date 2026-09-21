@@ -1,0 +1,51 @@
+blocks:
+  - type: mermaid
+    title: Include Resolution with Cycle Detection
+    diagram: |
+      flowchart LR
+        A[index.yml] --> B[concept.yml]
+        A --> C[renderer.yml]
+        B --> D[principles.yml]
+        C --> D
+        D -. invalid .-> A
+
+  - type: notice
+    tone: caution
+    title: Mermaid Failure Must Not Break the Page
+    body: Mermaid rendering is useful but optional. If Mermaid fails, the document should still remain readable and the original diagram source should be visible.
+
+  - type: decision
+    title: Mermaid Ownership
+    decision: Mermaid source belongs to DocIR, but Mermaid rendering belongs to the renderer.
+    rationale: Different output targets may use CDN rendering, bundled rendering, pre-rendered SVG, or plain source fallback.
+
+  - type: compare
+    title: Mermaid Rendering Modes
+    items:
+      - name: cdn
+        status: default-for-preview
+        summary: Load Mermaid from a CDN in generated HTML.
+        pros:
+          - Simple implementation
+          - Small generated output
+        cons:
+          - Requires network access
+          - Not ideal for offline distribution
+      - name: bundled
+        status: distribution
+        summary: Copy Mermaid assets into the output directory.
+        pros:
+          - Works offline
+          - Reproducible distribution
+        cons:
+          - Larger output
+          - Asset management is required
+      - name: pre_rendered
+        status: future
+        summary: Convert diagrams to SVG or PNG during rendering.
+        pros:
+          - Suitable for PDF and static archives
+          - Runtime JavaScript is unnecessary
+        cons:
+          - Build pipeline becomes heavier
+          - Error handling must happen at render time
